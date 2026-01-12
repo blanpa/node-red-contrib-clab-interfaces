@@ -1,0 +1,40 @@
+# Development files
+.git
+.gitignore
+.eslintrc.js
+.editorconfig
+
+# Documentation (keep README.md)
+sources.md
+EXAMPLE-FLOW-SETUP.md
+
+# Docker files
+docker-compose.yml
+docker-compose.host-network.yml
+Dockerfile
+
+# Test files
+test/
+*.test.js
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Node modules
+node_modules/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Temporary files
+*.tmp
+.tmp/
