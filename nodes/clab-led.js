@@ -1,31 +1,38 @@
 /**
  * CompuLab LED Node
- * Konsolidierter Node für LED Steuerung
+ * Consolidated node for LED control
  */
 
 const { exec } = require('child_process');
 const util = require('util');
-const fs = require('fs').promises;
+const fs = require('fs');
+const fsPromises = fs.promises;
 const execAsync = util.promisify(exec);
 
-// LED Mappings für verschiedene CompuLab Geräte
+// LED mappings for various CompuLab devices
+// IOT-GATE-IMX8PLUS has 2 bi-color LEDs (Green/Red each)
 const LED_MAPPINGS = {
     'IOT-GATE-IMX8PLUS': {
-        green: '/sys/class/leds/Green_1',
-        yellow: '/sys/class/leds/Red_1',  // Red_1 als "yellow"
-        red: '/sys/class/leds/Red_2',
-        green2: '/sys/class/leds/Green_2'
+        green: '/sys/class/leds/Green_1',    // LED 1 - Green
+        red1: '/sys/class/leds/Red_1',       // LED 1 - Red
+        yellow: ['Green_1', 'Red_1'],        // LED 1 - Yellow/Orange (both)
+        green2: '/sys/class/leds/Green_2',   // LED 2 - Green
+        red2: '/sys/class/leds/Red_2',       // LED 2 - Red
+        orange: ['Green_2', 'Red_2']         // LED 2 - Yellow/Orange (both)
     },
     'IOT-GATE-iMX8': {
-        green: '/sys/class/leds/Green_1',
-        yellow: '/sys/class/leds/Red_1',
-        red: '/sys/class/leds/Red_2',
-        green2: '/sys/class/leds/Green_2'
+        green: '/sys/class/leds/Green_1',    // LED 1 - Green
+        red1: '/sys/class/leds/Red_1',       // LED 1 - Red
+        yellow: ['Green_1', 'Red_1'],        // LED 1 - Yellow/Orange (both)
+        green2: '/sys/class/leds/Green_2',   // LED 2 - Green
+        red2: '/sys/class/leds/Red_2',       // LED 2 - Red
+        orange: ['Green_2', 'Red_2']         // LED 2 - Yellow/Orange (both)
     },
     'default': {
         green: '/sys/class/leds/Green_1',
-        yellow: '/sys/class/leds/Red_1',
-        red: '/sys/class/leds/Red_2'
+        red1: '/sys/class/leds/Red_1',
+        yellow: ['Green_1', 'Red_1'],
+        red2: '/sys/class/leds/Red_2'
     }
 };
 
@@ -35,26 +42,58 @@ module.exports = function(RED) {
         RED.nodes.createNode(this, config);
         const node = this;
         
-        const deviceType = config.deviceType || 'IOT-GATE-IMX8PLUS';
-        const ledMapping = LED_MAPPINGS[deviceType] || LED_MAPPINGS['default'];
-        const color = config.color || 'green';
-        const ledPath = ledMapping[color] || ledMapping.green;
         let blinkInterval = null;
+        
+        function getLedPath(deviceType, color) {
+            const ledMapping = LED_MAPPINGS[deviceType] || LED_MAPPINGS['default'];
+            const ledPath = ledMapping[color] || ledMapping.green;
+            
+            // Handle multi-LED colors (yellow, orange)
+            if (Array.isArray(ledPath)) {
+                return ledPath.map(led => `/sys/class/leds/${led}`);
+            }
+            return [ledPath];  // Always return array for consistency
+        }
 
-        async function setLed(state) {
+        function setLed(state, ledPaths) {
             const value = state ? '1' : '0';
-            try {
-                await fs.writeFile(`${ledPath}/brightness`, value);
-            } catch (e) {
-                // Fallback mit echo (für Kompatibilität)
-                await execAsync(`echo ${value} > ${ledPath}/brightness`);
+            
+            // Handle array of LED paths (for yellow/orange)
+            const paths = Array.isArray(ledPaths) ? ledPaths : [ledPaths];
+            
+            let lastError = null;
+            
+            for (const ledPath of paths) {
+                try {
+                    // Use synchronous write for reliability in setInterval
+                    fs.writeFileSync(`${ledPath}/brightness`, value);
+                } catch (e) {
+                    // Fallback: Try with shell command
+                    try {
+                        require('child_process').execSync(`echo ${value} > ${ledPath}/brightness`, { stdio: 'pipe' });
+                    } catch (e2) {
+                        lastError = e2;
+                        // Continue trying other LEDs
+                    }
+                }
+            }
+            
+            // If all attempts failed, throw the last error
+            if (lastError && paths.length === 1) {
+                throw lastError;
             }
         }
 
-        async function getLedState() {
+        async function getLedState(ledPaths) {
+            const paths = Array.isArray(ledPaths) ? ledPaths : [ledPaths];
+            
             try {
-                const data = await fs.readFile(`${ledPath}/brightness`, 'utf8');
-                return parseInt(data.trim()) > 0;
+                // For multi-LED colors, return true if ANY LED is on
+                for (const ledPath of paths) {
+                    const data = await fsPromises.readFile(`${ledPath}/brightness`, 'utf8');
+                    if (parseInt(data.trim()) > 0) return true;
+                }
+                return false;
             } catch (e) {
                 return false;
             }
@@ -68,57 +107,76 @@ module.exports = function(RED) {
         }
 
         node.on('input', async function(msg) {
-            const action = msg.action || config.action || 'on';
-            
             try {
+                // msg properties override config
+                const action = msg.action || config.action || 'on';
+                const deviceType = msg.deviceType || config.deviceType || 'IOT-GATE-IMX8PLUS';
+                const color = msg.color || config.color || 'green';
+                const ledPath = getLedPath(deviceType, color);
+                
                 stopBlink();
                 let result;
                 
                 switch (action) {
                     case 'on':
-                        await setLed(true);
-                        result = { state: true, action: 'on' };
-                        node.status({ fill: 'green', shape: 'dot', text: 'AN' });
+                        setLed(true, ledPath);
+                        result = { state: true, action: 'on', color, deviceType };
+                        node.status({ fill: 'green', shape: 'dot', text: 'ON' });
                         break;
                         
                     case 'off':
-                        await setLed(false);
-                        result = { state: false, action: 'off' };
-                        node.status({ fill: 'grey', shape: 'dot', text: 'AUS' });
+                        setLed(false, ledPath);
+                        result = { state: false, action: 'off', color, deviceType };
+                        node.status({ fill: 'grey', shape: 'dot', text: 'OFF' });
                         break;
                         
                     case 'toggle':
-                        const currentState = await getLedState();
-                        await setLed(!currentState);
-                        result = { state: !currentState, action: 'toggle' };
-                        node.status({ fill: !currentState ? 'green' : 'grey', shape: 'dot', text: !currentState ? 'AN' : 'AUS' });
+                        const currentState = await getLedState(ledPath);
+                        setLed(!currentState, ledPath);
+                        result = { state: !currentState, action: 'toggle', color, deviceType };
+                        node.status({ fill: !currentState ? 'green' : 'grey', shape: 'dot', text: !currentState ? 'ON' : 'OFF' });
                         break;
                         
                     case 'blink':
                         const interval = msg.interval || config.interval || 500;
                         let ledOn = false;
-                        blinkInterval = setInterval(async () => {
+                        
+                        // Test if we can write to LED first
+                        try {
+                            setLed(true, ledPath);
+                            setLed(false, ledPath);
+                        } catch (testErr) {
+                            throw new Error(`Cannot access LED (${testErr.message}). Check permissions or run Node-RED with sudo.`);
+                        }
+                        
+                        // Start blinking
+                        blinkInterval = setInterval(() => {
                             ledOn = !ledOn;
-                            await setLed(ledOn).catch(() => {});
+                            try {
+                                setLed(ledOn, ledPath);
+                            } catch (err) {
+                                node.warn(`Blink error: ${err.message}`);
+                            }
                         }, interval);
-                        result = { state: 'blinking', interval: interval, action: 'blink' };
-                        node.status({ fill: 'yellow', shape: 'ring', text: `Blinkt (${interval}ms)` });
+                        
+                        result = { state: 'blinking', interval: interval, action: 'blink', color, deviceType };
+                        node.status({ fill: 'yellow', shape: 'ring', text: `Blinking (${interval}ms)` });
                         break;
                         
                     case 'status':
-                        const state = await getLedState();
-                        result = { state: state, action: 'status' };
-                        node.status({ fill: state ? 'green' : 'grey', shape: 'dot', text: state ? 'AN' : 'AUS' });
+                        const state = await getLedState(ledPath);
+                        result = { state: state, action: 'status', color, deviceType };
+                        node.status({ fill: state ? 'green' : 'grey', shape: 'dot', text: state ? 'ON' : 'OFF' });
                         break;
                         
                     default:
                         // Wenn payload boolean ist
                         if (typeof msg.payload === 'boolean') {
-                            await setLed(msg.payload);
-                            result = { state: msg.payload, action: 'set' };
-                            node.status({ fill: msg.payload ? 'green' : 'grey', shape: 'dot', text: msg.payload ? 'AN' : 'AUS' });
+                            setLed(msg.payload, ledPath);
+                            result = { state: msg.payload, action: 'set', color, deviceType };
+                            node.status({ fill: msg.payload ? 'green' : 'grey', shape: 'dot', text: msg.payload ? 'ON' : 'OFF' });
                         } else {
-                            throw new Error(`Unbekannte Aktion: ${action}`);
+                            throw new Error(`Unknown action: ${action}`);
                         }
                 }
 
@@ -126,8 +184,9 @@ module.exports = function(RED) {
                 node.send(msg);
                 
             } catch (err) {
-                node.status({ fill: 'red', shape: 'ring', text: err.message });
-                node.error(err.message, msg);
+                const errorMsg = err.message || String(err);
+                node.status({ fill: 'red', shape: 'ring', text: errorMsg.substring(0, 30) });
+                node.error(errorMsg, msg);
             }
         });
 

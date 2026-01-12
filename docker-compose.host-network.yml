@@ -1,19 +1,29 @@
 version: '3.8'
 
+# This docker-compose configuration uses host networking mode
+# which allows the container to see the actual host network interfaces
+# and their real IP addresses (not Docker bridge IPs).
+#
+# Use this for:
+# - Accessing real network interfaces (eth0, wlan0, etc.)
+# - Seeing actual host IP addresses
+# - Bluetooth, WiFi configuration
+# - Network diagnostics
+#
+# Note: Port mapping is not needed in host mode as the container
+# uses the host's network stack directly.
+
 services:
   node-red:
     image: nodered/node-red:latest
     container_name: node-red-clab
     restart: unless-stopped
-    ports:
-      - "1880:1880"
+    network_mode: host  # Use host networking instead of bridge
     volumes:
       # Node-RED data persistence
       - node-red-data:/data
       # Mount this package for development (optional)
       - ./:/data/node_modules/node-red-contrib-clab-interfaces:ro
-      # Mount example flow (optional - comment out to use your own flows)
-      # - ./examples/compulab-demo-flow.json:/data/flows.json:ro
       # Hardware access (read-write for GPIO/LED control)
       - /dev:/dev
       - /sys:/sys
@@ -26,14 +36,6 @@ services:
     user: "0:0"  # Run as root for GPIO/LED access
     group_add:
       - dialout  # Serial ports
-      # - gpio   # GPIO access (not available on all systems)
-      # - i2c    # I2C access (not available on all systems)
-    networks:
-      - clab-network
 
 volumes:
   node-red-data:
-
-networks:
-  clab-network:
-    driver: bridge

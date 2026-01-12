@@ -2,7 +2,7 @@
 <script type="text/javascript">
     RED.nodes.registerType('clab-network', {
         category: 'CompuLab',
-        color: '#6B8E9F',
+        color: '#8BADC4',
         defaults: {
             name: { value: '' },
             action: { value: 'ping' },
@@ -26,6 +26,60 @@
         paletteLabel: 'Network',
         labelStyle: function() {
             return this.name ? 'node_label_italic' : '';
+        },
+        oneditprepare: function() {
+            const node = this;
+            
+            // Function to show/hide fields based on action
+            function updateFieldVisibility() {
+                const action = $('#node-input-action').val();
+                
+                // Hide all optional fields first
+                $('.form-row-host').hide();
+                $('.form-row-hostname').hide();
+                $('.form-row-port').hide();
+                $('.form-row-url').hide();
+                $('.form-row-dnstype').hide();
+                $('.form-row-count').hide();
+                $('.form-row-maxhops').hide();
+                
+                // Show relevant fields based on action
+                switch(action) {
+                    case 'ping':
+                        $('.form-row-host').show();
+                        $('.form-row-count').show();
+                        break;
+                    case 'traceroute':
+                        $('.form-row-host').show();
+                        $('.form-row-maxhops').show();
+                        break;
+                    case 'port-check':
+                        $('.form-row-host').show();
+                        $('.form-row-port').show();
+                        break;
+                    case 'http-check':
+                        $('.form-row-url').show();
+                        break;
+                    case 'dns':
+                        $('.form-row-hostname').show();
+                        $('.form-row-dnstype').show();
+                        break;
+                    case 'reverse-dns':
+                        $('.form-row-host').show();
+                        break;
+                    case 'routes':
+                    case 'arp':
+                    case 'speed-test':
+                        // No additional fields needed
+                        break;
+                }
+            }
+            
+            // Update on action change
+            $('#node-input-action').on('change', updateFieldVisibility);
+            
+            // Initial update
+            updateFieldVisibility();
         }
     });
 </script>
@@ -36,9 +90,9 @@
         <input type="text" id="node-input-name" placeholder="Name">
     </div>
     <div class="form-row">
-        <label for="node-input-action"><i class="fa fa-globe"></i> Aktion</label>
+        <label for="node-input-action"><i class="fa fa-globe"></i> Action</label>
         <select id="node-input-action">
-            <optgroup label="Erreichbarkeit">
+            <optgroup label="Connectivity">
                 <option value="ping">Ping</option>
                 <option value="traceroute">Traceroute</option>
                 <option value="port-check">Port Check</option>
@@ -49,30 +103,35 @@
                 <option value="reverse-dns">Reverse DNS</option>
             </optgroup>
             <optgroup label="Info">
-                <option value="routes">Routing Tabelle</option>
-                <option value="arp">ARP Tabelle</option>
+                <option value="routes">Routing Table</option>
+                <option value="arp">ARP Table</option>
                 <option value="speed-test">Speed Test</option>
             </optgroup>
         </select>
     </div>
-    <div class="form-row">
+    
+    <div class="form-row form-row-host" style="display:none;">
         <label for="node-input-host"><i class="fa fa-server"></i> Host/IP</label>
-        <input type="text" id="node-input-host" placeholder="z.B. 8.8.8.8 oder google.com">
+        <input type="text" id="node-input-host" placeholder="e.g. 8.8.8.8 or google.com">
     </div>
-    <div class="form-row">
-        <label for="node-input-hostname"><i class="fa fa-globe"></i> Hostname (DNS)</label>
-        <input type="text" id="node-input-hostname" placeholder="z.B. google.com">
+    
+    <div class="form-row form-row-hostname" style="display:none;">
+        <label for="node-input-hostname"><i class="fa fa-globe"></i> Hostname</label>
+        <input type="text" id="node-input-hostname" placeholder="e.g. google.com">
     </div>
-    <div class="form-row">
+    
+    <div class="form-row form-row-port" style="display:none;">
         <label for="node-input-port"><i class="fa fa-plug"></i> Port</label>
         <input type="number" id="node-input-port" min="1" max="65535">
     </div>
-    <div class="form-row">
+    
+    <div class="form-row form-row-url" style="display:none;">
         <label for="node-input-url"><i class="fa fa-link"></i> URL</label>
         <input type="text" id="node-input-url" placeholder="https://example.com">
     </div>
-    <div class="form-row">
-        <label for="node-input-dnsType"><i class="fa fa-list"></i> DNS Typ</label>
+    
+    <div class="form-row form-row-dnstype" style="display:none;">
+        <label for="node-input-dnsType"><i class="fa fa-list"></i> DNS Type</label>
         <select id="node-input-dnsType">
             <option value="A">A (IPv4)</option>
             <option value="AAAA">AAAA (IPv6)</option>
@@ -82,27 +141,29 @@
             <option value="CNAME">CNAME</option>
         </select>
     </div>
-    <div class="form-row">
-        <label for="node-input-count"><i class="fa fa-repeat"></i> Ping Anzahl</label>
+    
+    <div class="form-row form-row-count" style="display:none;">
+        <label for="node-input-count"><i class="fa fa-repeat"></i> Ping Count</label>
         <input type="number" id="node-input-count" min="1" max="100">
     </div>
-    <div class="form-row">
+    
+    <div class="form-row form-row-maxhops" style="display:none;">
         <label for="node-input-maxHops"><i class="fa fa-road"></i> Max Hops</label>
         <input type="number" id="node-input-maxHops" min="1" max="64">
     </div>
 </script>
 
 <script type="text/html" data-help-name="clab-network">
-    <p>Netzwerk-Diagnose für CompuLab IoT Gateway.</p>
+    <p>Network diagnostics for CompuLab IoT Gateway.</p>
     
-    <h3>Aktionen</h3>
+    <h3>Actions</h3>
     
-    <h4>Erreichbarkeit</h4>
+    <h4>Connectivity</h4>
     <ul>
-        <li><b>ping</b> - Ping mit RTT und Statistik</li>
-        <li><b>traceroute</b> - Route zum Ziel</li>
-        <li><b>port-check</b> - TCP Port prüfen</li>
-        <li><b>http-check</b> - HTTP/HTTPS Erreichbarkeit</li>
+        <li><b>ping</b> - Ping with RTT and statistics</li>
+        <li><b>traceroute</b> - Route to destination</li>
+        <li><b>port-check</b> - Check TCP port</li>
+        <li><b>http-check</b> - HTTP/HTTPS availability</li>
     </ul>
     
     <h4>DNS</h4>
@@ -113,20 +174,33 @@
     
     <h4>Info</h4>
     <ul>
-        <li><b>routes</b> - Routing Tabelle</li>
-        <li><b>arp</b> - ARP Tabelle (MAC Adressen)</li>
-        <li><b>speed-test</b> - Download Speed Test</li>
+        <li><b>routes</b> - Routing table</li>
+        <li><b>arp</b> - ARP table (MAC addresses)</li>
+        <li><b>speed-test</b> - Download speed test</li>
     </ul>
     
-    <h3>Eingabe</h3>
+    <h3>Input</h3>
     <dl class="message-properties">
+        <dt class="optional">action <span class="property-type">string</span></dt>
+        <dd>Action to perform (overrides configuration)</dd>
         <dt class="optional">host <span class="property-type">string</span></dt>
-        <dd>Ziel für ping/traceroute/port-check</dd>
+        <dd>Target for ping/traceroute/port-check (overrides configuration)</dd>
         <dt class="optional">hostname <span class="property-type">string</span></dt>
-        <dd>Hostname für DNS Lookup</dd>
+        <dd>Hostname for DNS lookup (overrides configuration)</dd>
         <dt class="optional">port <span class="property-type">number</span></dt>
-        <dd>Port für port-check</dd>
+        <dd>Port for port-check (overrides configuration)</dd>
         <dt class="optional">url <span class="property-type">string</span></dt>
-        <dd>URL für http-check</dd>
+        <dd>URL for http-check (overrides configuration)</dd>
+        <dt class="optional">count <span class="property-type">number</span></dt>
+        <dd>Ping count (overrides configuration)</dd>
+        <dt class="optional">timeout <span class="property-type">number</span></dt>
+        <dd>Timeout in seconds (overrides configuration)</dd>
+        <dt class="optional">maxHops <span class="property-type">number</span></dt>
+        <dd>Maximum hops for traceroute (overrides configuration)</dd>
+        <dt class="optional">type <span class="property-type">string</span></dt>
+        <dd>DNS record type (A, AAAA, MX, etc.)</dd>
     </dl>
+    
+    <h3>Details</h3>
+    <p>All configuration options can be overridden by message properties.</p>
 </script>

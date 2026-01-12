@@ -1,6 +1,6 @@
 /**
  * CompuLab GPS Node
- * Konsolidierter Node für GPS-Funktionen
+ * Consolidated node for GPS functions
  */
 
 const GPSHelper = require('../lib/gps-helper');
@@ -26,7 +26,7 @@ module.exports = function(RED) {
                         if (result.fix === 'yes') {
                             node.status({ fill: 'green', shape: 'dot', text: `${result.latitude?.toFixed(5)}, ${result.longitude?.toFixed(5)}` });
                         } else {
-                            node.status({ fill: 'yellow', shape: 'ring', text: 'Kein Fix' });
+                            node.status({ fill: 'yellow', shape: 'ring', text: 'No Fix' });
                         }
                         break;
                         
@@ -42,7 +42,7 @@ module.exports = function(RED) {
                         const lon2 = msg.lon2 || msg.payload?.lon2 || config.lon2;
                         
                         if (!lat1 || !lon1 || !lat2 || !lon2) {
-                            throw new Error('Koordinaten fehlen (lat1, lon1, lat2, lon2)');
+                            throw new Error('Coordinates missing (lat1, lon1, lat2, lon2)');
                         }
                         
                         const distance = gps.calculateDistance(
@@ -62,16 +62,16 @@ module.exports = function(RED) {
                         
                     case 'start-gpsd':
                         result = await gps.startGpsd();
-                        node.status({ fill: 'green', shape: 'dot', text: 'gpsd gestartet' });
+                        node.status({ fill: 'green', shape: 'dot', text: 'gpsd started' });
                         break;
                         
                     case 'stop-gpsd':
                         result = await gps.stopGpsd();
-                        node.status({ fill: 'grey', shape: 'dot', text: 'gpsd gestoppt' });
+                        node.status({ fill: 'grey', shape: 'dot', text: 'gpsd stopped' });
                         break;
                         
                     default:
-                        throw new Error(`Unbekannte Aktion: ${action}`);
+                        throw new Error(`Unknown action: ${action}`);
                 }
 
                 msg.payload = result;
@@ -93,7 +93,7 @@ module.exports = function(RED) {
             }
         });
 
-        // Automatisches Polling falls konfiguriert
+        // Automatic polling if configured
         if (config.interval && config.interval > 0) {
             intervalId = setInterval(async () => {
                 try {

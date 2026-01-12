@@ -1,0 +1,149 @@
+<!-- CompuLab UART Mode Switch Node -->
+<script type="text/javascript">
+    RED.nodes.registerType('clab-uart-mode', {
+        category: 'CompuLab',
+        color: '#8BADC4',
+        defaults: {
+            name: { value: '' },
+            port: { value: 'backpanel' },
+            mode: { value: 'rs232' }
+        },
+        inputs: 1,
+        outputs: 1,
+        icon: 'icons/clab.svg',
+        label: function() {
+            return this.name || 'UART Mode';
+        },
+        paletteLabel: 'UART Mode',
+        labelStyle: function() {
+            return this.name ? 'node_label_italic' : '';
+        }
+    });
+</script>
+
+<script type="text/html" data-template-name="clab-uart-mode">
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+    <div class="form-row">
+        <label for="node-input-port"><i class="fa fa-usb"></i> Port</label>
+        <select id="node-input-port">
+            <option value="backpanel">Backpanel (dual-mode)</option>
+        </select>
+        <span style="margin-left: 10px; color: #999; font-size: 0.9em;">Only dual-mode ports</span>
+    </div>
+    <div class="form-row">
+        <label for="node-input-mode"><i class="fa fa-exchange"></i> Mode</label>
+        <select id="node-input-mode">
+            <option value="rs232">RS232</option>
+            <option value="rs485">RS485</option>
+        </select>
+    </div>
+</script>
+
+<script type="text/html" data-help-name="clab-uart-mode">
+    <p>Switches UART mode between RS232 and RS485 for dual-mode serial ports.</p>
+    
+    <h3>Hardware Support</h3>
+    <p>This node controls the hardware mode switch (GPIO 507) on CompuLab gateways:</p>
+    <ul>
+        <li>✅ <b>IOT-GATE-iMX8</b> - Backpanel port</li>
+        <li>✅ <b>IOT-GATE-IMX8PLUS</b> - Backpanel port</li>
+        <li>✅ <b>SBC-IOT-iMX8</b> - Backpanel port</li>
+        <li>✅ <b>SBC-IOT-IMX8PLUS</b> - Backpanel port</li>
+        <li>❌ <b>IOT-DIN-IMX8PLUS</b> - Fixed RS485 (no switching)</li>
+        <li>❌ <b>IOT-LINK</b> - Fixed RS485 (no switching)</li>
+        <li>❌ <b>IOT-GATE-RPi</b> - Fixed RS485 (no switching)</li>
+    </ul>
+    
+    <h3>Input</h3>
+    <dl class="message-properties">
+        <dt class="optional">mode <span class="property-type">string</span></dt>
+        <dd>UART mode: "rs232" or "rs485" (overrides configuration)</dd>
+        <dt class="optional">port <span class="property-type">string</span></dt>
+        <dd>Port name (currently only "backpanel" supports mode switching)</dd>
+    </dl>
+    
+    <h3>Output</h3>
+    <dl class="message-properties">
+        <dt>payload.success <span class="property-type">boolean</span></dt>
+        <dd>True if mode was switched successfully</dd>
+        <dt>payload.mode <span class="property-type">string</span></dt>
+        <dd>Active mode: "RS232" or "RS485"</dd>
+        <dt>payload.port <span class="property-type">string</span></dt>
+        <dd>Port name</dd>
+        <dt>payload.device <span class="property-type">string</span></dt>
+        <dd>Device type</dd>
+        <dt>payload.gpio <span class="property-type">number</span></dt>
+        <dd>GPIO pin used for mode switching (507)</dd>
+    </dl>
+    
+    <h3>Mode Details</h3>
+    <h4>RS232 Mode</h4>
+    <ul>
+        <li><b>Use for:</b> Point-to-point connections</li>
+        <li><b>Distance:</b> Up to 15 meters</li>
+        <li><b>Devices:</b> PC, modems, GPS receivers, displays</li>
+        <li><b>Wiring:</b> TX, RX, GND (3 wires)</li>
+        <li><b>Topology:</b> 1:1 connection</li>
+    </ul>
+    
+    <h4>RS485 Mode</h4>
+    <ul>
+        <li><b>Use for:</b> Multi-drop bus networks</li>
+        <li><b>Distance:</b> Up to 1200 meters</li>
+        <li><b>Devices:</b> Modbus sensors, PLCs, industrial equipment</li>
+        <li><b>Wiring:</b> A+, B- (2 wires, differential)</li>
+        <li><b>Topology:</b> Multi-point bus (up to 32 devices)</li>
+    </ul>
+    
+    <h3>Examples</h3>
+    
+    <p><b>Switch to RS485 for Modbus:</b></p>
+    <pre>msg.mode = "rs485";
+return msg;</pre>
+    
+    <p><b>Switch to RS232 for GPS:</b></p>
+    <pre>msg.mode = "rs232";
+return msg;</pre>
+    
+    <p><b>Dynamic mode based on time:</b></p>
+    <pre>var hour = new Date().getHours();
+if (hour >= 8 && hour < 17) {
+    msg.mode = "rs485";  // Business hours: Modbus
+} else {
+    msg.mode = "rs232";  // After hours: Direct connection
+}
+return msg;</pre>
+    
+    <p><b>Mode switching flow:</b></p>
+    <pre>[Inject] → [UART Mode: RS485] → [Serial Out: Modbus Request]
+                      ↓
+                 GPIO 507 = 1 (RS485)</pre>
+    
+    <h3>Technical Details</h3>
+    <p>The mode is controlled via GPIO 507:</p>
+    <ul>
+        <li><b>RS232:</b> GPIO 507 = 0 (Low)</li>
+        <li><b>RS485:</b> GPIO 507 = 1 (High)</li>
+        <li><b>Path:</b> /sys/class/gpio/gpio507/value</li>
+    </ul>
+    
+    <h3>Important Notes</h3>
+    <ul>
+        <li>⚠️ Mode switching requires hardware support (dual-mode port)</li>
+        <li>⚠️ Close serial port before switching mode</li>
+        <li>⚠️ Wait ~100ms after switching before opening port</li>
+        <li>⚠️ Incorrect mode can damage equipment or prevent communication</li>
+    </ul>
+    
+    <h3>Typical Flow</h3>
+    <pre>[Inject: Start]
+    ↓
+[UART Mode: RS485]
+    ↓
+[Delay: 100ms]
+    ↓
+[Serial Out: Send Data]</pre>
+</script>

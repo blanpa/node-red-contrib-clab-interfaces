@@ -2,7 +2,7 @@
 <script type="text/javascript">
     RED.nodes.registerType('clab-gps', {
         category: 'CompuLab',
-        color: '#6B8E9F',
+        color: '#8BADC4',
         defaults: {
             name: { value: '' },
             action: { value: 'position' },
@@ -32,13 +32,13 @@
         <input type="text" id="node-input-name" placeholder="Name">
     </div>
     <div class="form-row">
-        <label for="node-input-action"><i class="fa fa-map-marker"></i> Aktion</label>
+        <label for="node-input-action"><i class="fa fa-map-marker"></i> Action</label>
         <select id="node-input-action">
-            <option value="position">Position lesen</option>
-            <option value="satellites">Satelliten Info</option>
-            <option value="distance">Distanz berechnen</option>
-            <option value="start-gpsd">gpsd starten</option>
-            <option value="stop-gpsd">gpsd stoppen</option>
+            <option value="position">Read Position</option>
+            <option value="satellites">Satellite Info</option>
+            <option value="distance">Calculate Distance</option>
+            <option value="start-gpsd">Start gpsd</option>
+            <option value="stop-gpsd">Stop gpsd</option>
         </select>
     </div>
     <div class="form-row">
@@ -46,37 +46,45 @@
         <input type="text" id="node-input-device" placeholder="/dev/ttyUSB1">
     </div>
     <div class="form-row">
-        <label for="node-input-interval"><i class="fa fa-clock-o"></i> Intervall (ms)</label>
-        <input type="number" id="node-input-interval" min="0" step="1000" placeholder="0 = nur bei Trigger">
+        <label for="node-input-interval"><i class="fa fa-clock-o"></i> Interval (ms)</label>
+        <input type="number" id="node-input-interval" min="0" step="1000" placeholder="0 = trigger only">
     </div>
     <div class="form-row">
-        <label><i class="fa fa-calculator"></i> Distanz-Berechnung</label>
+        <label><i class="fa fa-calculator"></i> Distance Calculation</label>
     </div>
     <div class="form-row" style="margin-left: 20px;">
-        <label style="width: 50px;">Von:</label>
+        <label style="width: 50px;">From:</label>
         <input type="text" id="node-input-lat1" style="width: 100px;" placeholder="Lat">
         <input type="text" id="node-input-lon1" style="width: 100px;" placeholder="Lon">
     </div>
     <div class="form-row" style="margin-left: 20px;">
-        <label style="width: 50px;">Nach:</label>
+        <label style="width: 50px;">To:</label>
         <input type="text" id="node-input-lat2" style="width: 100px;" placeholder="Lat">
         <input type="text" id="node-input-lon2" style="width: 100px;" placeholder="Lon">
     </div>
 </script>
 
 <script type="text/html" data-help-name="clab-gps">
-    <p>GPS-Funktionen für CompuLab IoT Gateway.</p>
+    <p>GPS functions for CompuLab IoT Gateway.</p>
     
-    <h3>Aktionen</h3>
+    <h3>Input</h3>
+    <dl class="message-properties">
+        <dt class="optional">action <span class="property-type">string</span></dt>
+        <dd>Action to perform (overrides configuration)</dd>
+        <dt class="optional">lat1, lon1, lat2, lon2 <span class="property-type">number</span></dt>
+        <dd>Coordinates for distance calculation (override configuration)</dd>
+    </dl>
+    
+    <h3>Actions</h3>
     <ul>
-        <li><b>position</b> - GPS Position (Lat, Lon, Alt, Speed)</li>
-        <li><b>satellites</b> - Satelliten-Info (sichtbar, genutzt)</li>
-        <li><b>distance</b> - Distanz zwischen zwei Punkten</li>
-        <li><b>start-gpsd</b> - gpsd Daemon starten</li>
-        <li><b>stop-gpsd</b> - gpsd Daemon stoppen</li>
+        <li><b>position</b> - GPS position (Lat, Lon, Alt, Speed)</li>
+        <li><b>satellites</b> - Satellite info (visible, used)</li>
+        <li><b>distance</b> - Distance between two points</li>
+        <li><b>start-gpsd</b> - Start gpsd daemon</li>
+        <li><b>stop-gpsd</b> - Stop gpsd daemon</li>
     </ul>
     
-    <h3>Ausgabe (Position)</h3>
+    <h3>Output (Position)</h3>
     <dl class="message-properties">
         <dt>payload.latitude <span class="property-type">number</span></dt>
         <dt>payload.longitude <span class="property-type">number</span></dt>
@@ -84,4 +92,7 @@
         <dt>payload.speed <span class="property-type">number</span></dt>
         <dt>payload.fix <span class="property-type">string</span></dt>
     </dl>
+    
+    <h3>Details</h3>
+    <p>All configuration options can be overridden by message properties.</p>
 </script>

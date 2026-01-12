@@ -1,13 +1,13 @@
 /**
- * CompuLab CAN Bus Node für Node-RED
- * CAN Kommunikation für IOT-GATE-iMX8 mit I/O Add-on
+ * CompuLab CAN Bus Node for Node-RED
+ * CAN communication for IOT-GATE-iMX8 with I/O Add-on
  */
 
 module.exports = function(RED) {
     const CANHelper = require('../lib/can-helper');
 
     // ============================================
-    // CAN Config Node - Gemeinsame Konfiguration
+    // CAN Config Node - Shared configuration
     // ============================================
     function ClabCanConfigNode(config) {
         RED.nodes.createNode(this, config);
@@ -20,7 +20,7 @@ module.exports = function(RED) {
         node.configured = false;
         node.users = [];
 
-        // Interface konfigurieren
+        // Configure interface
         node.setup = async function() {
             if (node.configured) {
                 return true;
@@ -35,7 +35,7 @@ module.exports = function(RED) {
             }
         };
 
-        // Benutzer registrieren
+        // Register user
         node.registerUser = function(userNode) {
             node.users.push(userNode);
         };
@@ -57,7 +57,7 @@ module.exports = function(RED) {
     RED.nodes.registerType('clab-can-config', ClabCanConfigNode);
 
     // ============================================
-    // CAN In Node - Empfängt CAN Nachrichten
+    // CAN In Node - Receives CAN messages
     // ============================================
     function ClabCanInNode(config) {
         RED.nodes.createNode(this, config);
@@ -67,15 +67,15 @@ module.exports = function(RED) {
         node.filterIds = config.filterIds ? config.filterIds.split(',').map(id => parseInt(id.trim(), 16)) : [];
 
         if (!node.canConfig) {
-            node.status({ fill: 'red', shape: 'ring', text: 'Nicht konfiguriert' });
+            node.status({ fill: 'red', shape: 'ring', text: 'Not configured' });
             return;
         }
 
-        node.status({ fill: 'yellow', shape: 'dot', text: 'Initialisiere...' });
+        node.status({ fill: 'yellow', shape: 'dot', text: 'Initializing...' });
 
         // Message Handler
         const messageHandler = (frame) => {
-            // Filter anwenden wenn konfiguriert
+            // Apply filter if configured
             if (node.filterIds.length > 0 && !node.filterIds.includes(frame.id)) {
                 return;
             }
@@ -102,14 +102,14 @@ module.exports = function(RED) {
             node.error(err.message);
         };
 
-        // Setup und Listener starten
+        // Setup and start listener
         node.canConfig.registerUser(node);
         node.canConfig.setup()
             .then(() => {
                 node.canConfig.helper.on('message', messageHandler);
                 node.canConfig.helper.on('error', errorHandler);
                 node.canConfig.helper.startReceive();
-                node.status({ fill: 'green', shape: 'dot', text: 'Empfange...' });
+                node.status({ fill: 'green', shape: 'dot', text: 'Receiving...' });
             })
             .catch((err) => {
                 node.status({ fill: 'red', shape: 'ring', text: err.message });
@@ -127,7 +127,7 @@ module.exports = function(RED) {
     RED.nodes.registerType('clab-can-in', ClabCanInNode);
 
     // ============================================
-    // CAN Out Node - Sendet CAN Nachrichten
+    // CAN Out Node - Sends CAN messages
     // ============================================
     function ClabCanOutNode(config) {
         RED.nodes.createNode(this, config);
@@ -137,17 +137,17 @@ module.exports = function(RED) {
         node.canId = config.canId ? parseInt(config.canId, 16) : null;
 
         if (!node.canConfig) {
-            node.status({ fill: 'red', shape: 'ring', text: 'Nicht konfiguriert' });
+            node.status({ fill: 'red', shape: 'ring', text: 'Not configured' });
             return;
         }
 
-        node.status({ fill: 'yellow', shape: 'dot', text: 'Initialisiere...' });
+        node.status({ fill: 'yellow', shape: 'dot', text: 'Initializing...' });
 
         // Setup
         node.canConfig.registerUser(node);
         node.canConfig.setup()
             .then(() => {
-                node.status({ fill: 'green', shape: 'dot', text: 'Bereit' });
+                node.status({ fill: 'green', shape: 'dot', text: 'Ready' });
             })
             .catch((err) => {
                 node.status({ fill: 'red', shape: 'ring', text: err.message });
@@ -156,42 +156,42 @@ module.exports = function(RED) {
         // Input Handler
         node.on('input', async (msg, send, done) => {
             try {
-                // CAN ID bestimmen
+                // Determine CAN ID
                 let canId = msg.canId || node.canId;
                 if (typeof canId === 'string') {
                     canId = parseInt(canId, 16);
                 }
                 
                 if (!canId && canId !== 0) {
-                    throw new Error('Keine CAN ID angegeben');
+                    throw new Error('No CAN ID specified');
                 }
 
-                // Daten vorbereiten
+                // Prepare data
                 let data;
                 if (Array.isArray(msg.payload)) {
                     data = msg.payload;
                 } else if (Buffer.isBuffer(msg.payload)) {
                     data = Array.from(msg.payload);
                 } else if (typeof msg.payload === 'string') {
-                    // Hex-String parsen
+                    // Parse hex string
                     data = msg.payload.split(/[\s,]+/).map(h => parseInt(h, 16));
                 } else if (typeof msg.payload === 'object' && msg.payload.data) {
                     data = msg.payload.data;
                     canId = msg.payload.id || canId;
                 } else {
-                    throw new Error('Ungültiges Datenformat');
+                    throw new Error('Invalid data format');
                 }
 
-                // Senden
+                // Send
                 const result = await node.canConfig.helper.send(canId, data);
                 
                 node.status({ 
                     fill: 'green', 
                     shape: 'dot', 
-                    text: `Gesendet: 0x${canId.toString(16).toUpperCase()}` 
+                    text: `Sent: 0x${canId.toString(16).toUpperCase()}` 
                 });
 
-                // Bestätigung senden
+                // Send confirmation
                 msg.result = result;
                 send(msg);
                 

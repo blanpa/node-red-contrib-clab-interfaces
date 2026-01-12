@@ -2,7 +2,7 @@
 <script type="text/javascript">
     RED.nodes.registerType('clab-cellular', {
         category: 'CompuLab',
-        color: '#6B8E9F',
+        color: '#8BADC4',
         defaults: {
             name: { value: '' },
             action: { value: 'status' },
@@ -28,23 +28,23 @@
         <input type="text" id="node-input-name" placeholder="Name">
     </div>
     <div class="form-row">
-        <label for="node-input-action"><i class="fa fa-signal"></i> Aktion</label>
+        <label for="node-input-action"><i class="fa fa-signal"></i> Action</label>
         <select id="node-input-action">
             <optgroup label="Status">
-                <option value="status">Verbindungsstatus</option>
+                <option value="status">Connection Status</option>
                 <option value="info">Modem Info</option>
                 <option value="sim">SIM Info</option>
-                <option value="signal">Signalstärke</option>
+                <option value="signal">Signal Strength</option>
             </optgroup>
-            <optgroup label="Verbindung">
-                <option value="connect">Verbinden</option>
-                <option value="disconnect">Trennen</option>
+            <optgroup label="Connection">
+                <option value="connect">Connect</option>
+                <option value="disconnect">Disconnect</option>
             </optgroup>
             <optgroup label="Modem">
-                <option value="enable">Modem aktivieren</option>
-                <option value="disable">Modem deaktivieren</option>
+                <option value="enable">Enable Modem</option>
+                <option value="disable">Disable Modem</option>
                 <option value="reset">Modem Reset</option>
-                <option value="at-command">AT-Befehl senden</option>
+                <option value="at-command">Send AT Command</option>
             </optgroup>
         </select>
     </div>
@@ -53,42 +53,55 @@
         <input type="text" id="node-input-apn" placeholder="internet">
     </div>
     <div class="form-row">
-        <label for="node-input-interval"><i class="fa fa-clock-o"></i> Signal-Intervall (ms)</label>
-        <input type="number" id="node-input-interval" min="0" step="1000" placeholder="0 = kein Auto-Update">
+        <label for="node-input-interval"><i class="fa fa-clock-o"></i> Signal Interval (ms)</label>
+        <input type="number" id="node-input-interval" min="0" step="1000" placeholder="0 = no auto-update">
     </div>
 </script>
 
 <script type="text/html" data-help-name="clab-cellular">
-    <p>LTE/4G Modem-Steuerung für CompuLab IoT Gateway.</p>
+    <p>LTE/4G modem control for CompuLab IoT Gateway.</p>
     
-    <h3>Aktionen</h3>
+    <h3>Input</h3>
+    <dl class="message-properties">
+        <dt class="optional">action <span class="property-type">string</span></dt>
+        <dd>Action (overrides configuration)</dd>
+        <dt class="optional">apn <span class="property-type">string</span></dt>
+        <dd>APN for connection (overrides configuration)</dd>
+        <dt class="optional">command <span class="property-type">string</span></dt>
+        <dd>AT command to send</dd>
+    </dl>
+    
+    <h3>Actions</h3>
     
     <h4>Status</h4>
     <ul>
-        <li><b>status</b> - Verbindungsstatus (IP, Operator)</li>
-        <li><b>info</b> - Modem-Info (Hersteller, Modell, IMEI)</li>
-        <li><b>sim</b> - SIM-Karten Info (IMSI, ICCID)</li>
-        <li><b>signal</b> - Signalstärke (RSRP, RSRQ, %)</li>
+        <li><b>status</b> - Connection status (IP, Operator)</li>
+        <li><b>info</b> - Modem info (manufacturer, model, IMEI)</li>
+        <li><b>sim</b> - SIM card info (IMSI, ICCID)</li>
+        <li><b>signal</b> - Signal strength (RSRP, RSRQ, %)</li>
     </ul>
     
-    <h4>Verbindung</h4>
+    <h4>Connection</h4>
     <ul>
-        <li><b>connect</b> - Mit Netz verbinden</li>
-        <li><b>disconnect</b> - Verbindung trennen</li>
+        <li><b>connect</b> - Connect to network</li>
+        <li><b>disconnect</b> - Disconnect</li>
     </ul>
     
     <h4>Modem</h4>
     <ul>
-        <li><b>enable/disable</b> - Modem an/aus</li>
-        <li><b>reset</b> - Modem neustarten</li>
-        <li><b>at-command</b> - AT-Befehl senden (msg.command)</li>
+        <li><b>enable/disable</b> - Modem on/off</li>
+        <li><b>reset</b> - Restart modem</li>
+        <li><b>at-command</b> - Send AT command (msg.command)</li>
     </ul>
     
-    <h3>Signalstärke</h3>
+    <h3>Signal Strength</h3>
     <ul>
         <li><b>Excellent</b>: RSRP ≥ -80 dBm</li>
         <li><b>Good</b>: RSRP ≥ -90 dBm</li>
         <li><b>Fair</b>: RSRP ≥ -100 dBm</li>
         <li><b>Poor</b>: RSRP < -100 dBm</li>
     </ul>
+    
+    <h3>Details</h3>
+    <p>All configuration options can be overridden by message properties.</p>
 </script>

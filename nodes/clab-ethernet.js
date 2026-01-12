@@ -1,6 +1,6 @@
 /**
  * CompuLab Ethernet Node
- * Konsolidierter Node für Ethernet-Funktionen
+ * Consolidated node for Ethernet functions
  */
 
 const EthernetHelper = require('../lib/ethernet-helper');
@@ -22,7 +22,7 @@ module.exports = function(RED) {
                 switch (action) {
                     case 'status':
                         result = await eth.getStatus(iface);
-                        node.status({ fill: result.connected ? 'green' : 'yellow', shape: 'dot', text: result.ipAddress || 'Getrennt' });
+                        node.status({ fill: result.connected ? 'green' : 'yellow', shape: 'dot', text: result.ipAddress || 'Disconnected' });
                         break;
                         
                     case 'interfaces':
@@ -37,12 +37,12 @@ module.exports = function(RED) {
                         
                     case 'enable':
                         result = await eth.enable(iface);
-                        node.status({ fill: 'green', shape: 'dot', text: 'Aktiviert' });
+                        node.status({ fill: 'green', shape: 'dot', text: 'Enabled' });
                         break;
                         
                     case 'disable':
                         result = await eth.disable(iface);
-                        node.status({ fill: 'grey', shape: 'dot', text: 'Deaktiviert' });
+                        node.status({ fill: 'grey', shape: 'dot', text: 'Disabled' });
                         break;
                         
                     case 'dhcp':
@@ -52,7 +52,7 @@ module.exports = function(RED) {
                         break;
                         
                     case 'static':
-                        node.status({ fill: 'blue', shape: 'ring', text: 'Konfiguriere...' });
+                        node.status({ fill: 'blue', shape: 'ring', text: 'Configuring...' });
                         result = await eth.setStaticIP({
                             interface: iface,
                             ipAddress: msg.ipAddress || config.ipAddress,
@@ -64,7 +64,7 @@ module.exports = function(RED) {
                         break;
                         
                     default:
-                        throw new Error(`Unbekannte Aktion: ${action}`);
+                        throw new Error(`Unknown action: ${action}`);
                 }
 
                 msg.payload = result;

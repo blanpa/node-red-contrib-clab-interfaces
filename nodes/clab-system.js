@@ -1,6 +1,6 @@
 /**
  * CompuLab System Node
- * Konsolidierter Node für System-Funktionen
+ * Consolidated node for system functions
  */
 
 const SystemHelper = require('../lib/system-helper');
@@ -49,7 +49,7 @@ module.exports = function(RED) {
                     case 'rtc-set':
                         const time = msg.time || msg.payload;
                         result = await system.setRtcTime(time);
-                        node.status({ fill: 'green', shape: 'dot', text: 'RTC gesetzt' });
+                        node.status({ fill: 'green', shape: 'dot', text: 'RTC set' });
                         break;
                         
                     case 'rtc-sync':
@@ -60,7 +60,7 @@ module.exports = function(RED) {
                     // Watchdog
                     case 'watchdog-status':
                         result = await system.getWatchdogStatus();
-                        node.status({ fill: result.enabled ? 'green' : 'grey', shape: 'dot', text: result.enabled ? 'Aktiv' : 'Inaktiv' });
+                        node.status({ fill: result.enabled ? 'green' : 'grey', shape: 'dot', text: result.enabled ? 'Active' : 'Inactive' });
                         break;
                         
                     case 'watchdog-enable':
@@ -71,7 +71,7 @@ module.exports = function(RED) {
                         
                     case 'watchdog-disable':
                         result = await system.disableWatchdog();
-                        node.status({ fill: 'grey', shape: 'dot', text: 'WD aus' });
+                        node.status({ fill: 'grey', shape: 'dot', text: 'WD off' });
                         break;
                         
                     case 'watchdog-kick':
@@ -82,7 +82,7 @@ module.exports = function(RED) {
                     // TPM
                     case 'tpm-status':
                         result = await system.getTpmStatus();
-                        node.status({ fill: result.available ? 'green' : 'yellow', shape: 'dot', text: result.available ? 'TPM OK' : 'Kein TPM' });
+                        node.status({ fill: result.available ? 'green' : 'yellow', shape: 'dot', text: result.available ? 'TPM OK' : 'No TPM' });
                         break;
                         
                     case 'tpm-random':
@@ -104,7 +104,7 @@ module.exports = function(RED) {
                         break;
                         
                     default:
-                        throw new Error(`Unbekannte Aktion: ${action}`);
+                        throw new Error(`Unknown action: ${action}`);
                 }
 
                 msg.payload = result;

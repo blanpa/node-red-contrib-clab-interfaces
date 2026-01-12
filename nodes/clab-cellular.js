@@ -1,6 +1,6 @@
 /**
  * CompuLab Cellular Node
- * Konsolidierter Node für LTE/4G Modem-Funktionen
+ * Consolidated node for LTE/4G modem functions
  */
 
 const CellularHelper = require('../lib/cellular-helper');
@@ -23,7 +23,7 @@ module.exports = function(RED) {
                 switch (action) {
                     case 'status':
                         result = await cellular.getConnectionStatus();
-                        node.status({ fill: result.connected ? 'green' : 'yellow', shape: 'dot', text: result.connected ? 'Verbunden' : result.state });
+                        node.status({ fill: result.connected ? 'green' : 'yellow', shape: 'dot', text: result.connected ? 'Connected' : result.state });
                         break;
                         
                     case 'info':
@@ -44,24 +44,24 @@ module.exports = function(RED) {
                         
                     case 'connect':
                         const apn = msg.apn || config.apn;
-                        node.status({ fill: 'blue', shape: 'ring', text: 'Verbinde...' });
+                        node.status({ fill: 'blue', shape: 'ring', text: 'Connecting...' });
                         result = await cellular.connect(apn);
-                        node.status({ fill: result.success ? 'green' : 'red', shape: 'dot', text: result.success ? 'Verbunden' : 'Fehler' });
+                        node.status({ fill: result.success ? 'green' : 'red', shape: 'dot', text: result.success ? 'Connected' : 'Error' });
                         break;
                         
                     case 'disconnect':
                         result = await cellular.disconnect();
-                        node.status({ fill: 'grey', shape: 'dot', text: 'Getrennt' });
+                        node.status({ fill: 'grey', shape: 'dot', text: 'Disconnected' });
                         break;
                         
                     case 'enable':
                         result = await cellular.setPowerState(true);
-                        node.status({ fill: 'green', shape: 'dot', text: 'Aktiviert' });
+                        node.status({ fill: 'green', shape: 'dot', text: 'Enabled' });
                         break;
                         
                     case 'disable':
                         result = await cellular.setPowerState(false);
-                        node.status({ fill: 'grey', shape: 'dot', text: 'Deaktiviert' });
+                        node.status({ fill: 'grey', shape: 'dot', text: 'Disabled' });
                         break;
                         
                     case 'reset':
@@ -72,13 +72,13 @@ module.exports = function(RED) {
                         
                     case 'at-command':
                         const command = msg.command || msg.payload;
-                        if (!command) throw new Error('AT-Befehl erforderlich');
+                        if (!command) throw new Error('AT command required');
                         result = await cellular.sendATCommand(command);
                         node.status({ fill: 'green', shape: 'dot', text: 'AT OK' });
                         break;
                         
                     default:
-                        throw new Error(`Unbekannte Aktion: ${action}`);
+                        throw new Error(`Unknown action: ${action}`);
                 }
 
                 msg.payload = result;
@@ -91,7 +91,7 @@ module.exports = function(RED) {
             }
         });
 
-        // Automatisches Signal-Polling falls konfiguriert
+        // Automatic signal polling if configured
         if (config.interval && config.interval > 0) {
             intervalId = setInterval(async () => {
                 try {

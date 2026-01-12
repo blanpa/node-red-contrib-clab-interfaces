@@ -2,13 +2,14 @@
 <script type="text/javascript">
     RED.nodes.registerType('clab-system', {
         category: 'CompuLab',
-        color: '#6B8E9F',
+        color: '#8BADC4',
         defaults: {
             name: { value: '' },
             action: { value: 'info' },
             timeout: { value: 60 },
             bytes: { value: 32 },
-            delay: { value: 0 }
+            delay: { value: 0 },
+            time: { value: '' }
         },
         inputs: 1,
         outputs: 1,
@@ -19,6 +20,37 @@
         paletteLabel: 'System',
         labelStyle: function() {
             return this.name ? 'node_label_italic' : '';
+        },
+        oneditprepare: function() {
+            const node = this;
+            
+            // Function to show/hide fields based on action
+            function updateFieldVisibility() {
+                const action = $('#node-input-action').val();
+                
+                // Hide all optional fields first
+                $('.form-row-timeout').hide();
+                $('.form-row-bytes').hide();
+                $('.form-row-delay').hide();
+                $('.form-row-time').hide();
+                
+                // Show relevant fields based on action
+                if (action === 'watchdog-enable') {
+                    $('.form-row-timeout').show();
+                } else if (action === 'tpm-random') {
+                    $('.form-row-bytes').show();
+                } else if (action === 'reboot' || action === 'shutdown') {
+                    $('.form-row-delay').show();
+                } else if (action === 'rtc-set') {
+                    $('.form-row-time').show();
+                }
+            }
+            
+            // Update on action change
+            $('#node-input-action').on('change', updateFieldVisibility);
+            
+            // Initial update
+            updateFieldVisibility();
         }
     });
 </script>
@@ -29,84 +61,137 @@
         <input type="text" id="node-input-name" placeholder="Name">
     </div>
     <div class="form-row">
-        <label for="node-input-action"><i class="fa fa-cog"></i> Aktion</label>
+        <label for="node-input-action"><i class="fa fa-cog"></i> Action</label>
         <select id="node-input-action">
             <optgroup label="System Info">
                 <option value="info">System Info</option>
                 <option value="uptime">Uptime</option>
-                <option value="temperature">Temperatur</option>
+                <option value="temperature">Temperature</option>
             </optgroup>
-            <optgroup label="RTC (Echtzeituhr)">
-                <option value="rtc-read">RTC lesen</option>
-                <option value="rtc-set">RTC setzen</option>
+            <optgroup label="RTC (Real-Time Clock)">
+                <option value="rtc-read">Read RTC</option>
+                <option value="rtc-set">Set RTC</option>
                 <option value="rtc-sync">RTC → System sync</option>
             </optgroup>
             <optgroup label="Watchdog">
                 <option value="watchdog-status">Watchdog Status</option>
-                <option value="watchdog-enable">Watchdog aktivieren</option>
-                <option value="watchdog-disable">Watchdog deaktivieren</option>
+                <option value="watchdog-enable">Enable Watchdog</option>
+                <option value="watchdog-disable">Disable Watchdog</option>
                 <option value="watchdog-kick">Watchdog kick</option>
             </optgroup>
             <optgroup label="TPM">
                 <option value="tpm-status">TPM Status</option>
-                <option value="tpm-random">TPM Zufallszahlen</option>
+                <option value="tpm-random">TPM Random Bytes</option>
             </optgroup>
             <optgroup label="Power">
-                <option value="reboot">Neustart</option>
-                <option value="shutdown">Herunterfahren</option>
+                <option value="reboot">Reboot</option>
+                <option value="shutdown">Shutdown</option>
             </optgroup>
         </select>
     </div>
-    <div class="form-row">
+    <div class="form-row form-row-timeout" style="display:none;">
         <label for="node-input-timeout"><i class="fa fa-clock-o"></i> Watchdog Timeout (s)</label>
-        <input type="number" id="node-input-timeout" min="10" max="3600">
+        <input type="number" id="node-input-timeout" min="10" max="3600" placeholder="60">
     </div>
-    <div class="form-row">
-        <label for="node-input-bytes"><i class="fa fa-random"></i> TPM Random Bytes</label>
-        <input type="number" id="node-input-bytes" min="1" max="1024">
+    <div class="form-row form-row-bytes" style="display:none;">
+        <label for="node-input-bytes"><i class="fa fa-random"></i> Random Bytes</label>
+        <input type="number" id="node-input-bytes" min="1" max="1024" placeholder="32">
     </div>
-    <div class="form-row">
-        <label for="node-input-delay"><i class="fa fa-hourglass"></i> Verzögerung (s)</label>
-        <input type="number" id="node-input-delay" min="0" max="3600">
+    <div class="form-row form-row-delay" style="display:none;">
+        <label for="node-input-delay"><i class="fa fa-hourglass"></i> Delay (minutes)</label>
+        <input type="number" id="node-input-delay" min="0" max="60" placeholder="0 = now">
+    </div>
+    <div class="form-row form-row-time" style="display:none;">
+        <label for="node-input-time"><i class="fa fa-calendar"></i> Time</label>
+        <input type="text" id="node-input-time" placeholder="2026-01-12 14:30:00 or 'now'">
     </div>
 </script>
 
 <script type="text/html" data-help-name="clab-system">
-    <p>System-Funktionen für CompuLab IoT Gateway.</p>
+    <p>System functions for CompuLab IoT Gateway.</p>
     
-    <h3>Aktionen</h3>
+    <h3>Configuration</h3>
+    <p>The configuration fields shown depend on the selected action:</p>
+    <ul>
+        <li><b>Watchdog Enable</b> → Timeout field (10-3600 seconds)</li>
+        <li><b>TPM Random</b> → Bytes field (1-1024 bytes)</li>
+        <li><b>Reboot/Shutdown</b> → Delay field (0-60 minutes, 0 = immediate)</li>
+        <li><b>RTC Set</b> → Time field (format: "2026-01-12 14:30:00" or "now")</li>
+    </ul>
+    
+    <h3>Input (msg properties)</h3>
+    <dl class="message-properties">
+        <dt class="optional">action <span class="property-type">string</span></dt>
+        <dd>Action to perform (overrides configuration)</dd>
+        <dt class="optional">timeout <span class="property-type">number</span></dt>
+        <dd>Watchdog timeout in seconds (for watchdog-enable)</dd>
+        <dt class="optional">bytes <span class="property-type">number</span></dt>
+        <dd>Number of random bytes (for tpm-random)</dd>
+        <dt class="optional">delay <span class="property-type">number</span></dt>
+        <dd>Delay in minutes for reboot/shutdown (0 = immediate)</dd>
+        <dt class="optional">time <span class="property-type">string</span></dt>
+        <dd>Time string for rtc-set</dd>
+    </dl>
+    
+    <h3>Actions</h3>
     
     <h4>System Info</h4>
     <ul>
         <li><b>info</b> - Hostname, Kernel, CPU, Memory</li>
-        <li><b>uptime</b> - System Laufzeit</li>
-        <li><b>temperature</b> - CPU Temperatur</li>
+        <li><b>uptime</b> - System uptime</li>
+        <li><b>temperature</b> - CPU temperature</li>
     </ul>
     
-    <h4>RTC (Echtzeituhr)</h4>
+    <h4>RTC (Real-Time Clock)</h4>
     <ul>
-        <li><b>rtc-read</b> - Hardware-Uhr auslesen</li>
-        <li><b>rtc-set</b> - Hardware-Uhr setzen (msg.time)</li>
-        <li><b>rtc-sync</b> - RTC mit Systemzeit synchronisieren</li>
+        <li><b>rtc-read</b> - Read hardware clock</li>
+        <li><b>rtc-set</b> - Set hardware clock (msg.time)</li>
+        <li><b>rtc-sync</b> - Sync RTC to system time</li>
     </ul>
     
     <h4>Watchdog</h4>
     <ul>
-        <li><b>watchdog-status</b> - Watchdog Status</li>
-        <li><b>watchdog-enable</b> - Watchdog aktivieren</li>
-        <li><b>watchdog-disable</b> - Watchdog deaktivieren</li>
-        <li><b>watchdog-kick</b> - Watchdog zurücksetzen</li>
+        <li><b>watchdog-status</b> - Watchdog status</li>
+        <li><b>watchdog-enable</b> - Enable watchdog</li>
+        <li><b>watchdog-disable</b> - Disable watchdog</li>
+        <li><b>watchdog-kick</b> - Reset watchdog timer</li>
     </ul>
     
     <h4>TPM</h4>
     <ul>
-        <li><b>tpm-status</b> - TPM Verfügbarkeit</li>
-        <li><b>tpm-random</b> - Zufallszahlen generieren</li>
+        <li><b>tpm-status</b> - TPM availability</li>
+        <li><b>tpm-random</b> - Generate random bytes</li>
     </ul>
     
     <h4>Power</h4>
     <ul>
-        <li><b>reboot</b> - System neustarten</li>
-        <li><b>shutdown</b> - System herunterfahren</li>
+        <li><b>reboot</b> - Reboot system</li>
+        <li><b>shutdown</b> - Shutdown system</li>
     </ul>
+    
+    <h3>Examples</h3>
+    
+    <p><b>Enable Watchdog with 120s timeout:</b></p>
+    <pre>msg.action = "watchdog-enable";
+msg.timeout = 120;
+return msg;</pre>
+    
+    <p><b>Get TPM random 64 bytes:</b></p>
+    <pre>msg.action = "tpm-random";
+msg.bytes = 64;
+return msg;</pre>
+    
+    <p><b>Reboot in 5 minutes:</b></p>
+    <pre>msg.action = "reboot";
+msg.delay = 5;
+return msg;</pre>
+    
+    <p><b>Set RTC to current system time:</b></p>
+    <pre>msg.action = "rtc-set";
+msg.time = "now";
+return msg;</pre>
+    
+    <h3>Details</h3>
+    <p>Configuration fields are shown/hidden dynamically based on the selected action.</p>
+    <p>All configuration options can be overridden by message properties.</p>
 </script>

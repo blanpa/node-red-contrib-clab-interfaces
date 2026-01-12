@@ -2,7 +2,7 @@
 <script type="text/javascript">
     RED.nodes.registerType('clab-ethernet', {
         category: 'CompuLab',
-        color: '#6B8E9F',
+        color: '#8BADC4',
         defaults: {
             name: { value: '' },
             action: { value: 'status' },
@@ -21,6 +21,35 @@
         paletteLabel: 'Ethernet',
         labelStyle: function() {
             return this.name ? 'node_label_italic' : '';
+        },
+        oneditprepare: function() {
+            const node = this;
+            
+            // Function to show/hide fields based on action
+            function updateFieldVisibility() {
+                const action = $('#node-input-action').val();
+                
+                // Hide all optional fields first
+                $('.form-row-interface').hide();
+                $('.form-row-static-ip').hide();
+                
+                // Show relevant fields based on action
+                if (action === 'status' || action === 'statistics' || 
+                    action === 'enable' || action === 'disable' || action === 'dhcp') {
+                    $('.form-row-interface').show();
+                } else if (action === 'static') {
+                    $('.form-row-interface').show();
+                    $('.form-row-static-ip').show();
+                } else if (action === 'interfaces') {
+                    // No additional fields needed
+                }
+            }
+            
+            // Update on action change
+            $('#node-input-action').on('change', updateFieldVisibility);
+            
+            // Initial update
+            updateFieldVisibility();
         }
     });
 </script>
@@ -31,24 +60,24 @@
         <input type="text" id="node-input-name" placeholder="Name">
     </div>
     <div class="form-row">
-        <label for="node-input-action"><i class="fa fa-plug"></i> Aktion</label>
+        <label for="node-input-action"><i class="fa fa-plug"></i> Action</label>
         <select id="node-input-action">
             <optgroup label="Status">
                 <option value="status">Interface Status</option>
-                <option value="interfaces">Alle Interfaces</option>
-                <option value="statistics">Statistiken (RX/TX)</option>
+                <option value="interfaces">All Interfaces</option>
+                <option value="statistics">Statistics (RX/TX)</option>
             </optgroup>
-            <optgroup label="Steuerung">
-                <option value="enable">Aktivieren</option>
-                <option value="disable">Deaktivieren</option>
+            <optgroup label="Control">
+                <option value="enable">Enable</option>
+                <option value="disable">Disable</option>
             </optgroup>
-            <optgroup label="Konfiguration">
-                <option value="dhcp">DHCP aktivieren</option>
-                <option value="static">Statische IP setzen</option>
+            <optgroup label="Configuration">
+                <option value="dhcp">Enable DHCP</option>
+                <option value="static">Set Static IP</option>
             </optgroup>
         </select>
     </div>
-    <div class="form-row">
+    <div class="form-row form-row-interface" style="display:none;">
         <label for="node-input-interface"><i class="fa fa-ethernet"></i> Interface</label>
         <select id="node-input-interface">
             <option value="eth0">eth0</option>
@@ -56,56 +85,69 @@
             <option value="enp0s3">enp0s3</option>
         </select>
     </div>
-    <div class="form-row">
-        <label><i class="fa fa-cog"></i> Statische IP</label>
-    </div>
-    <div class="form-row" style="margin-left: 20px;">
-        <label for="node-input-ipAddress" style="width: 80px;">IP</label>
-        <input type="text" id="node-input-ipAddress" style="width: 200px;" placeholder="192.168.1.100">
-    </div>
-    <div class="form-row" style="margin-left: 20px;">
-        <label for="node-input-netmask" style="width: 80px;">Netmask</label>
-        <input type="text" id="node-input-netmask" style="width: 200px;" placeholder="255.255.255.0">
-    </div>
-    <div class="form-row" style="margin-left: 20px;">
-        <label for="node-input-gateway" style="width: 80px;">Gateway</label>
-        <input type="text" id="node-input-gateway" style="width: 200px;" placeholder="192.168.1.1">
-    </div>
-    <div class="form-row" style="margin-left: 20px;">
-        <label for="node-input-dns" style="width: 80px;">DNS</label>
-        <input type="text" id="node-input-dns" style="width: 200px;" placeholder="8.8.8.8, 8.8.4.4">
+    <div class="form-row-static-ip" style="display:none;">
+        <div class="form-row">
+            <label><i class="fa fa-cog"></i> Static IP Configuration</label>
+        </div>
+        <div class="form-row" style="margin-left: 20px;">
+            <label for="node-input-ipAddress" style="width: 80px;">IP Address</label>
+            <input type="text" id="node-input-ipAddress" style="width: 200px;" placeholder="192.168.1.100">
+        </div>
+        <div class="form-row" style="margin-left: 20px;">
+            <label for="node-input-netmask" style="width: 80px;">Netmask</label>
+            <input type="text" id="node-input-netmask" style="width: 200px;" placeholder="255.255.255.0">
+        </div>
+        <div class="form-row" style="margin-left: 20px;">
+            <label for="node-input-gateway" style="width: 80px;">Gateway</label>
+            <input type="text" id="node-input-gateway" style="width: 200px;" placeholder="192.168.1.1">
+        </div>
+        <div class="form-row" style="margin-left: 20px;">
+            <label for="node-input-dns" style="width: 80px;">DNS</label>
+            <input type="text" id="node-input-dns" style="width: 200px;" placeholder="8.8.8.8, 8.8.4.4">
+        </div>
     </div>
 </script>
 
 <script type="text/html" data-help-name="clab-ethernet">
-    <p>Ethernet-Steuerung für CompuLab IoT Gateway.</p>
+    <p>Ethernet control for CompuLab IoT Gateway.</p>
     
-    <h3>Aktionen</h3>
+    <h3>Actions</h3>
     
     <h4>Status</h4>
     <ul>
-        <li><b>status</b> - Interface Status (IP, MAC, Speed)</li>
-        <li><b>interfaces</b> - Alle Netzwerk-Interfaces</li>
-        <li><b>statistics</b> - RX/TX Bytes und Pakete</li>
+        <li><b>status</b> - Interface status (IP, MAC, Speed)</li>
+        <li><b>interfaces</b> - All network interfaces</li>
+        <li><b>statistics</b> - RX/TX bytes and packets</li>
     </ul>
     
-    <h4>Steuerung</h4>
+    <h4>Control</h4>
     <ul>
-        <li><b>enable</b> - Interface aktivieren</li>
-        <li><b>disable</b> - Interface deaktivieren</li>
+        <li><b>enable</b> - Enable interface</li>
+        <li><b>disable</b> - Disable interface</li>
     </ul>
     
-    <h4>Konfiguration</h4>
+    <h4>Configuration</h4>
     <ul>
-        <li><b>dhcp</b> - DHCP aktivieren</li>
-        <li><b>static</b> - Statische IP setzen</li>
+        <li><b>dhcp</b> - Enable DHCP</li>
+        <li><b>static</b> - Set static IP</li>
     </ul>
     
-    <h3>Eingabe (für static)</h3>
+    <h3>Input</h3>
     <dl class="message-properties">
-        <dt>ipAddress <span class="property-type">string</span></dt>
-        <dt>netmask <span class="property-type">string</span></dt>
-        <dt>gateway <span class="property-type">string</span></dt>
-        <dt>dns <span class="property-type">string|array</span></dt>
+        <dt class="optional">action <span class="property-type">string</span></dt>
+        <dd>Action to perform (overrides configuration)</dd>
+        <dt class="optional">interface <span class="property-type">string</span></dt>
+        <dd>Network interface (overrides configuration)</dd>
+        <dt class="optional">ipAddress <span class="property-type">string</span></dt>
+        <dd>Static IP address (for static action, overrides configuration)</dd>
+        <dt class="optional">netmask <span class="property-type">string</span></dt>
+        <dd>Network mask (for static action, overrides configuration)</dd>
+        <dt class="optional">gateway <span class="property-type">string</span></dt>
+        <dd>Gateway address (for static action, overrides configuration)</dd>
+        <dt class="optional">dns <span class="property-type">string|array</span></dt>
+        <dd>DNS servers (for static action, overrides configuration)</dd>
     </dl>
+    
+    <h3>Details</h3>
+    <p>All configuration options can be overridden by message properties.</p>
 </script>

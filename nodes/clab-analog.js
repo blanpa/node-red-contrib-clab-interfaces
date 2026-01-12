@@ -1,6 +1,6 @@
 /**
- * CompuLab Analog Input Node für Node-RED
- * Unterstützt:
+ * CompuLab Analog Input Node for Node-RED
+ * Supports:
  * - 4-20mA Current Loop
  * - 0-10V / 0-5V Voltage Input
  * - PT100/PT1000 Temperature Sensors
@@ -42,13 +42,13 @@ module.exports = function(RED) {
 
         node.status({ fill: 'yellow', shape: 'dot', text: 'Initializing...' });
 
-        // Prüfe ob Devices verfügbar
+        // Check if devices are available
         const devices = node.helper.getDevices();
         if (devices.length === 0) {
             node.status({ fill: 'grey', shape: 'ring', text: 'No ADC found' });
         }
 
-        // Lese-Funktion
+        // Read function
         const readAnalog = () => {
             try {
                 let reading;
@@ -113,7 +113,7 @@ module.exports = function(RED) {
                         break;
                 }
                 
-                // Prüfe ob sich der Wert signifikant geändert hat
+                // Check if value changed significantly
                 const shouldSend = !node.outputOnChange || 
                     node.lastValue === null ||
                     Math.abs(displayValue - node.lastValue) >= node.threshold;
@@ -133,7 +133,7 @@ module.exports = function(RED) {
                         timestamp: Date.now()
                     };
                     
-                    // Zusätzliche Felder je nach Typ
+                    // Additional fields depending on type
                     if (node.inputType === 'current') {
                         msg.currentMA = reading.currentMA;
                     } else if (node.inputType === 'voltage') {
@@ -165,7 +165,7 @@ module.exports = function(RED) {
             }
         };
 
-        // Starte Polling falls konfiguriert
+        // Start polling if configured
         if (devices.length > 0 && node.interval > 0) {
             readAnalog();
             node.timer = setInterval(readAnalog, node.interval);
@@ -173,9 +173,9 @@ module.exports = function(RED) {
             node.status({ fill: 'blue', shape: 'dot', text: 'Ready' });
         }
 
-        // Input Handler - ermöglicht manuelles Triggern
+        // Input handler - allows manual triggering
         node.on('input', (msg) => {
-            // Überschreibe Konfiguration aus msg falls vorhanden
+            // Override configuration from msg if present
             if (msg.deviceIndex !== undefined) node.deviceIndex = msg.deviceIndex;
             if (msg.channelIndex !== undefined) node.channelIndex = msg.channelIndex;
             readAnalog();
@@ -192,7 +192,7 @@ module.exports = function(RED) {
     RED.nodes.registerType('clab-analog-in', ClabAnalogInNode);
 
     // ============================================
-    // Analog Devices Node - Listet verfügbare ADCs
+    // Analog Devices Node - Lists available ADCs
     // ============================================
     function ClabAnalogDevicesNode(config) {
         RED.nodes.createNode(this, config);

@@ -2,13 +2,12 @@
 <script type="text/javascript">
     RED.nodes.registerType('clab-wifi', {
         category: 'CompuLab',
-        color: '#6B8E9F',
+        color: '#8BADC4',
         defaults: {
             name: { value: '' },
             action: { value: 'status' },
             interface: { value: 'wlan0' },
-            ssid: { value: '' },
-            password: { value: '' },
+            wifiConfig: { value: '', type: 'clab-wifi-config' },
             apSsid: { value: 'CompuLab-AP' },
             apPassword: { value: '' },
             band: { value: 'bg' }
@@ -22,6 +21,72 @@
         paletteLabel: 'WiFi',
         labelStyle: function() {
             return this.name ? 'node_label_italic' : '';
+        },
+        oneditprepare: function() {
+            const node = this;
+            
+            // Function to show/hide fields based on action
+            function updateFieldVisibility() {
+                const action = $('#node-input-action').val();
+                
+                // Hide all optional fields first
+                $('.form-row-interface').hide();
+                $('.form-row-wificonfig').hide();
+                $('.form-row-ap').hide();
+                
+                // Show relevant fields based on action
+                switch(action) {
+                    case 'status':
+                    case 'enable':
+                    case 'disable':
+                        $('.form-row-interface').show();
+                        break;
+                    case 'scan':
+                        $('.form-row-interface').show();
+                        break;
+                    case 'connect':
+                        $('.form-row-interface').show();
+                        $('.form-row-wificonfig').show();
+                        break;
+                    case 'disconnect':
+                    case 'saved':
+                        $('.form-row-interface').show();
+                        break;
+                    case 'delete':
+                        $('.form-row-wificonfig').show();
+                        break;
+                    case 'ap-start':
+                        $('.form-row-interface').show();
+                        $('.form-row-ap').show();
+                        break;
+                    case 'ap-stop':
+                        $('.form-row-interface').show();
+                        break;
+                }
+            }
+            
+            // Update on action change
+            $('#node-input-action').on('change', updateFieldVisibility);
+            
+            // Initial update
+            updateFieldVisibility();
+        }
+    });
+</script>
+
+<!-- WiFi Configuration Node (credentials) -->
+<script type="text/javascript">
+    RED.nodes.registerType('clab-wifi-config', {
+        category: 'config',
+        defaults: {
+            name: { value: '' },
+            ssid: { value: '' }
+        },
+        credentials: {
+            password: { type: 'password' }
+        },
+        label: function() {
+            return this.name || this.ssid || 'WiFi Config';
         }
     });
 </script>
@@ -32,91 +97,142 @@
         <input type="text" id="node-input-name" placeholder="Name">
     </div>
     <div class="form-row">
-        <label for="node-input-action"><i class="fa fa-wifi"></i> Aktion</label>
+        <label for="node-input-action"><i class="fa fa-wifi"></i> Action</label>
         <select id="node-input-action">
             <optgroup label="Status">
                 <option value="status">Status</option>
-                <option value="enable">Aktivieren</option>
-                <option value="disable">Deaktivieren</option>
+                <option value="enable">Enable</option>
+                <option value="disable">Disable</option>
             </optgroup>
-            <optgroup label="Netzwerke">
-                <option value="scan">Scannen</option>
-                <option value="connect">Verbinden</option>
-                <option value="disconnect">Trennen</option>
-                <option value="saved">Gespeicherte Verbindungen</option>
-                <option value="delete">Verbindung löschen</option>
+            <optgroup label="Networks">
+                <option value="scan">Scan</option>
+                <option value="connect">Connect</option>
+                <option value="disconnect">Disconnect</option>
+                <option value="saved">Saved Connections</option>
+                <option value="delete">Delete Connection</option>
             </optgroup>
             <optgroup label="Access Point">
-                <option value="ap-start">AP starten</option>
-                <option value="ap-stop">AP stoppen</option>
+                <option value="ap-start">Start AP</option>
+                <option value="ap-stop">Stop AP</option>
             </optgroup>
         </select>
     </div>
-    <div class="form-row">
+    <div class="form-row form-row-interface" style="display:none;">
         <label for="node-input-interface"><i class="fa fa-plug"></i> Interface</label>
         <input type="text" id="node-input-interface" placeholder="wlan0">
     </div>
+    
+    <div class="form-row form-row-wificonfig" style="display:none;">
+        <label for="node-input-wifiConfig"><i class="fa fa-wifi"></i> WiFi Network</label>
+        <input type="text" id="node-input-wifiConfig">
+    </div>
+    
+    <div class="form-row-ap" style="display:none;">
+        <div class="form-row">
+            <label><i class="fa fa-broadcast-tower"></i> Access Point Configuration</label>
+        </div>
+        <div class="form-row" style="margin-left: 20px;">
+            <label for="node-input-apSsid" style="width: 80px;">AP Name</label>
+            <input type="text" id="node-input-apSsid" style="width: 200px;" placeholder="CompuLab-AP">
+        </div>
+        <div class="form-row" style="margin-left: 20px;">
+            <label for="node-input-apPassword" style="width: 80px;">AP Password</label>
+            <input type="password" id="node-input-apPassword" style="width: 200px;" placeholder="Min. 8 characters">
+        </div>
+        <div class="form-row" style="margin-left: 20px;">
+            <label for="node-input-band" style="width: 80px;">Band</label>
+            <select id="node-input-band" style="width: 200px;">
+                <option value="bg">2.4 GHz</option>
+                <option value="a">5 GHz</option>
+            </select>
+        </div>
+    </div>
+</script>
+
+<script type="text/html" data-template-name="clab-wifi-config">
     <div class="form-row">
-        <label for="node-input-ssid"><i class="fa fa-wifi"></i> SSID</label>
-        <input type="text" id="node-input-ssid" placeholder="Netzwerkname">
+        <label for="node-config-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-config-input-name" placeholder="e.g., Home WiFi">
     </div>
     <div class="form-row">
-        <label for="node-input-password"><i class="fa fa-key"></i> Passwort</label>
-        <input type="password" id="node-input-password" placeholder="WiFi Passwort">
+        <label for="node-config-input-ssid"><i class="fa fa-wifi"></i> SSID</label>
+        <input type="text" id="node-config-input-ssid" placeholder="Network name">
     </div>
     <div class="form-row">
-        <label><i class="fa fa-broadcast-tower"></i> Access Point</label>
-    </div>
-    <div class="form-row" style="margin-left: 20px;">
-        <label for="node-input-apSsid" style="width: 80px;">AP Name</label>
-        <input type="text" id="node-input-apSsid" style="width: 200px;" placeholder="CompuLab-AP">
-    </div>
-    <div class="form-row" style="margin-left: 20px;">
-        <label for="node-input-apPassword" style="width: 80px;">AP Passwort</label>
-        <input type="password" id="node-input-apPassword" style="width: 200px;" placeholder="Min. 8 Zeichen">
-    </div>
-    <div class="form-row" style="margin-left: 20px;">
-        <label for="node-input-band" style="width: 80px;">Band</label>
-        <select id="node-input-band" style="width: 200px;">
-            <option value="bg">2.4 GHz</option>
-            <option value="a">5 GHz</option>
-        </select>
+        <label for="node-config-input-password"><i class="fa fa-lock"></i> Password</label>
+        <input type="password" id="node-config-input-password" placeholder="WiFi password">
     </div>
 </script>
 
 <script type="text/html" data-help-name="clab-wifi">
-    <p>WiFi-Steuerung für CompuLab IoT Gateway.</p>
+    <p>WiFi control for CompuLab IoT Gateway.</p>
     
-    <h3>Eingabe</h3>
+    <h3>Configuration</h3>
+    <p>WiFi networks are configured as separate configuration nodes. This allows you to:</p>
+    <ul>
+        <li>Store multiple WiFi networks (Home, Office, Mobile Hotspot, etc.)</li>
+        <li>Switch between networks by selecting different WiFi Config nodes</li>
+        <li>Keep passwords secure in Node-RED's credential store</li>
+        <li>Reuse WiFi configurations across multiple flows</li>
+    </ul>
+    
+    <h3>Input</h3>
     <dl class="message-properties">
         <dt class="optional">action <span class="property-type">string</span></dt>
-        <dd>Aktion (überschreibt Konfiguration)</dd>
+        <dd>Action (overrides configuration)</dd>
         <dt class="optional">ssid <span class="property-type">string</span></dt>
-        <dd>Netzwerkname für connect</dd>
+        <dd>Network name for connect (overrides WiFi Config)</dd>
         <dt class="optional">password <span class="property-type">string</span></dt>
-        <dd>WiFi Passwort</dd>
+        <dd>WiFi password (overrides WiFi Config)</dd>
+        <dt class="optional">band <span class="property-type">string</span></dt>
+        <dd>WiFi band: bg (2.4 GHz) or a (5 GHz)</dd>
+        <dt class="optional">name <span class="property-type">string</span></dt>
+        <dd>Connection name for delete action</dd>
     </dl>
     
-    <h3>Aktionen</h3>
+    <h3>Actions</h3>
     
     <h4>Status</h4>
     <ul>
-        <li><b>status</b> - WiFi Status (SSID, IP, Signal)</li>
-        <li><b>enable/disable</b> - WiFi an/aus</li>
+        <li><b>status</b> - WiFi status (SSID, IP, Signal)</li>
+        <li><b>enable/disable</b> - WiFi on/off</li>
     </ul>
     
-    <h4>Netzwerke</h4>
+    <h4>Networks</h4>
     <ul>
-        <li><b>scan</b> - Nach Netzwerken suchen</li>
-        <li><b>connect</b> - Mit Netzwerk verbinden</li>
-        <li><b>disconnect</b> - Verbindung trennen</li>
-        <li><b>saved</b> - Gespeicherte Verbindungen</li>
-        <li><b>delete</b> - Verbindung löschen</li>
+        <li><b>scan</b> - Scan for networks</li>
+        <li><b>connect</b> - Connect to network (uses selected WiFi Config)</li>
+        <li><b>disconnect</b> - Disconnect</li>
+        <li><b>saved</b> - Saved connections</li>
+        <li><b>delete</b> - Delete connection</li>
     </ul>
     
     <h4>Access Point</h4>
     <ul>
-        <li><b>ap-start</b> - Hotspot erstellen</li>
-        <li><b>ap-stop</b> - Hotspot stoppen</li>
+        <li><b>ap-start</b> - Create hotspot</li>
+        <li><b>ap-stop</b> - Stop hotspot</li>
     </ul>
+    
+    <h3>Details</h3>
+    <p>All configuration options can be overridden by message properties.</p>
+    
+    <h3>Example: Switching Between Networks</h3>
+    <p>Create multiple WiFi Config nodes (e.g., "Home WiFi", "Office WiFi") and deploy multiple WiFi nodes with different configs. Trigger the appropriate node to switch networks.</p>
+</script>
+
+<script type="text/html" data-help-name="clab-wifi-config">
+    <p>WiFi network configuration for CompuLab IoT Gateway.</p>
+    
+    <h3>Configuration</h3>
+    <dl class="message-properties">
+        <dt>name <span class="property-type">string</span></dt>
+        <dd>Friendly name for this WiFi network (e.g., "Home WiFi", "Office WiFi")</dd>
+        <dt>ssid <span class="property-type">string</span></dt>
+        <dd>WiFi network name (SSID)</dd>
+        <dt>password <span class="property-type">password</span></dt>
+        <dd>WiFi password (stored securely in Node-RED credentials)</dd>
+    </dl>
+    
+    <h3>Usage</h3>
+    <p>Create one WiFi Config node for each network you want to connect to. Then reference these configs in your WiFi nodes to easily switch between networks.</p>
 </script>

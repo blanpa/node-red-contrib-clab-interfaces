@@ -2,9 +2,11 @@
 <script type="text/javascript">
     RED.nodes.registerType('clab-led', {
         category: 'CompuLab',
-        color: '#6B8E9F',
+        color: '#8BADC4',
         defaults: {
             name: { value: '' },
+            deviceType: { value: 'IOT-GATE-IMX8PLUS' },
+            color: { value: 'green' },
             action: { value: 'on' },
             interval: { value: 500 }
         },
@@ -27,37 +29,118 @@
         <input type="text" id="node-input-name" placeholder="Name">
     </div>
     <div class="form-row">
-        <label for="node-input-action"><i class="fa fa-lightbulb-o"></i> Aktion</label>
-        <select id="node-input-action">
-            <option value="on">Einschalten</option>
-            <option value="off">Ausschalten</option>
-            <option value="toggle">Umschalten</option>
-            <option value="blink">Blinken</option>
-            <option value="status">Status lesen</option>
+        <label for="node-input-deviceType"><i class="fa fa-microchip"></i> Device Type</label>
+        <select id="node-input-deviceType">
+            <option value="IOT-GATE-IMX8PLUS">IOT-GATE-IMX8PLUS</option>
+            <option value="IOT-GATE-iMX8">IOT-GATE-iMX8</option>
+            <option value="default">Default</option>
         </select>
     </div>
     <div class="form-row">
-        <label for="node-input-interval"><i class="fa fa-clock-o"></i> Blink-Intervall (ms)</label>
+        <label for="node-input-color"><i class="fa fa-circle"></i> LED</label>
+        <select id="node-input-color">
+            <optgroup label="LED 1 (Bi-color: Green/Red)">
+                <option value="green">LED 1 - Green</option>
+                <option value="red1">LED 1 - Red</option>
+                <option value="yellow">LED 1 - Yellow/Orange (Green+Red)</option>
+            </optgroup>
+            <optgroup label="LED 2 (Bi-color: Green/Red)">
+                <option value="green2">LED 2 - Green</option>
+                <option value="red2">LED 2 - Red</option>
+                <option value="orange">LED 2 - Yellow/Orange (Green+Red)</option>
+            </optgroup>
+        </select>
+    </div>
+    <div class="form-row">
+        <label for="node-input-action"><i class="fa fa-lightbulb-o"></i> Action</label>
+        <select id="node-input-action">
+            <option value="on">Turn On</option>
+            <option value="off">Turn Off</option>
+            <option value="toggle">Toggle</option>
+            <option value="blink">Blink</option>
+            <option value="status">Read Status</option>
+        </select>
+    </div>
+    <div class="form-row">
+        <label for="node-input-interval"><i class="fa fa-clock-o"></i> Blink Interval (ms)</label>
         <input type="number" id="node-input-interval" min="100" max="5000" step="100">
     </div>
 </script>
 
 <script type="text/html" data-help-name="clab-led">
-    <p>Steuert die User LED (DS4) des CompuLab IoT Gateway.</p>
+    <p>Controls the front panel LEDs of the CompuLab IoT Gateway.</p>
     
-    <h3>Eingabe</h3>
+    <h3>Hardware LEDs</h3>
+    <p>The <b>IOT-GATE-IMX8PLUS</b> has <b>2 bi-color LEDs</b> on the front panel:</p>
+    <ul>
+        <li><b>LED 1</b>: Green (Green_1) + Red (Red_1)</li>
+        <li><b>LED 2</b>: Green (Green_2) + Red (Red_2)</li>
+    </ul>
+    <p>Each LED can show Green, Red, or both (= Orange/Yellow when both are on).</p>
+    
+    <h3>Input</h3>
     <dl class="message-properties">
+        <dt class="optional">deviceType <span class="property-type">string</span></dt>
+        <dd>Device type (overrides configuration)</dd>
+        <dt class="optional">color <span class="property-type">string</span></dt>
+        <dd>LED selection:
+            <ul>
+                <li><b>green</b>: LED 1 - Green</li>
+                <li><b>red1</b>: LED 1 - Red</li>
+                <li><b>yellow</b>: LED 1 - Yellow/Orange (Green+Red)</li>
+                <li><b>green2</b>: LED 2 - Green</li>
+                <li><b>red2</b>: LED 2 - Red</li>
+                <li><b>orange</b>: LED 2 - Yellow/Orange (Green+Red)</li>
+            </ul>
+        </dd>
         <dt class="optional">action <span class="property-type">string</span></dt>
-        <dd>on, off, toggle, blink, status</dd>
+        <dd>on, off, toggle, blink, status (overrides configuration)</dd>
         <dt class="optional">payload <span class="property-type">boolean</span></dt>
-        <dd>true = an, false = aus</dd>
+        <dd>true = on, false = off</dd>
         <dt class="optional">interval <span class="property-type">number</span></dt>
-        <dd>Blink-Intervall in ms (für action: blink)</dd>
+        <dd>Blink interval in ms (for action: blink)</dd>
     </dl>
     
-    <h3>Ausgabe</h3>
+    <h3>Output</h3>
     <dl class="message-properties">
         <dt>payload.state <span class="property-type">boolean|string</span></dt>
-        <dd>LED Status (true/false oder "blinking")</dd>
+        <dd>LED status (true/false or "blinking")</dd>
+        <dt>payload.color <span class="property-type">string</span></dt>
+        <dd>Used LED</dd>
+        <dt>payload.deviceType <span class="property-type">string</span></dt>
+        <dd>Used device type</dd>
     </dl>
+    
+    <h3>Examples</h3>
+    <p><b>LED 1 Green turn on:</b></p>
+    <pre>msg.color = "green";
+msg.action = "on";
+return msg;</pre>
+    
+    <p><b>LED 2 Red blink:</b></p>
+    <pre>msg.color = "red2";
+msg.action = "blink";
+msg.interval = 1000;
+return msg;</pre>
+    
+    <p><b>LED 1 Yellow/Orange (both colors):</b></p>
+    <pre>msg.color = "yellow";  // Turns on Green_1 AND Red_1
+msg.action = "on";
+return msg;</pre>
+    
+    <p><b>Status indicator with colors:</b></p>
+    <pre>// OK: Green
+msg.color = "green";
+msg.payload = true;
+
+// Warning: Yellow
+msg.color = "yellow";
+msg.payload = true;
+
+// Error: Red
+msg.color = "red1";
+msg.payload = true;</pre>
+    
+    <h3>Details</h3>
+    <p>All configuration options can be overridden by message properties.</p>
 </script>

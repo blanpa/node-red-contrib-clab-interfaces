@@ -49,6 +49,7 @@
     "nodes": {
       "clab-gpio": "nodes/clab-gpio.js",
       "clab-serial": "nodes/clab-serial.js",
+      "clab-uart-mode": "nodes/clab-uart-mode.js",
       "clab-can": "nodes/clab-can.js",
       "clab-analog": "nodes/clab-analog.js",
       "clab-led": "nodes/clab-led.js",

@@ -13,6 +13,23 @@
         },
         label: function() {
             return this.name || `Serial: ${this.port} @ ${this.baudRate}`;
+        },
+        oneditprepare: function() {
+            // Ports that support both RS232 and RS485
+            const dualModePorts = ['backpanel'];
+            
+            function updateUartModeVisibility() {
+                const port = $('#node-config-input-port').val();
+                
+                if (dualModePorts.includes(port)) {
+                    $('.form-row-uartMode').show();
+                } else {
+                    $('.form-row-uartMode').hide();
+                }
+            }
+            
+            $('#node-config-input-port').on('change', updateUartModeVisibility);
+            updateUartModeVisibility();
         }
     });
 </script>
@@ -26,39 +43,40 @@
         <label for="node-config-input-port"><i class="fa fa-usb"></i> Port</label>
         <select id="node-config-input-port">
             <optgroup label="IOT-GATE-iMX8 / IMX8PLUS">
-                <option value="backpanel">Backpanel RS485/RS232 (/dev/ttymxc2)</option>
-                <option value="addon_rs232">Add-on RS232 (/dev/ttymxc1)</option>
-                <option value="addon_rs485">Add-on RS485 (/dev/ttymxc3)</option>
+                <option value="backpanel">Backpanel (dual-mode: RS232/RS485) - /dev/ttymxc2</option>
+                <option value="addon_rs232">Add-on RS232 - /dev/ttymxc1</option>
+                <option value="addon_rs485">Add-on RS485 - /dev/ttymxc3</option>
             </optgroup>
             <optgroup label="IOT-DIN-IMX8PLUS">
-                <option value="rs485">RS485 (/dev/ttymxc2)</option>
+                <option value="rs485">RS485 - /dev/ttymxc2</option>
             </optgroup>
             <optgroup label="IOT-LINK (i.MX93)">
-                <option value="rs485_a">RS485 A - FARS4 (/dev/ttyLP6)</option>
-                <option value="rs485_b">RS485 B - FBRS4 (/dev/ttyLP4)</option>
+                <option value="rs485_a">RS485 A (FARS4) - /dev/ttyLP6</option>
+                <option value="rs485_b">RS485 B (FBRS4) - /dev/ttyLP4</option>
             </optgroup>
             <optgroup label="IOT-GATE-RPi">
-                <option value="rs485_0">RS485 0 (/dev/ttyAMA1)</option>
-                <option value="rs485_1">RS485 1 (/dev/ttyAMA2)</option>
-                <option value="rs485_2">RS485 2 (/dev/ttyAMA3)</option>
-                <option value="rs485_3">RS485 3 (/dev/ttyAMA4)</option>
+                <option value="rs485_0">RS485 Port 0 - /dev/ttyAMA1</option>
+                <option value="rs485_1">RS485 Port 1 - /dev/ttyAMA2</option>
+                <option value="rs485_2">RS485 Port 2 - /dev/ttyAMA3</option>
+                <option value="rs485_3">RS485 Port 3 - /dev/ttyAMA4</option>
             </optgroup>
             <optgroup label="USB / Console">
-                <option value="console">Console (/dev/ttyUSB0)</option>
+                <option value="console">Console - /dev/ttyUSB0</option>
                 <option value="/dev/ttyUSB0">/dev/ttyUSB0</option>
                 <option value="/dev/ttyUSB1">/dev/ttyUSB1</option>
             </optgroup>
         </select>
     </div>
-    <div class="form-row">
-        <label for="node-config-input-uartMode"><i class="fa fa-exchange"></i> UART Modus</label>
+    <div class="form-row form-row-uartMode">
+        <label for="node-config-input-uartMode"><i class="fa fa-exchange"></i> UART Mode</label>
         <select id="node-config-input-uartMode">
             <option value="rs232">RS232</option>
             <option value="rs485">RS485</option>
         </select>
+        <span style="margin-left: 10px; color: #999; font-size: 0.9em;">Select mode for dual-mode port</span>
     </div>
     <div class="form-row">
-        <label for="node-config-input-baudRate"><i class="fa fa-tachometer"></i> Baudrate</label>
+        <label for="node-config-input-baudRate"><i class="fa fa-tachometer"></i> Baud Rate</label>
         <select id="node-config-input-baudRate">
             <option value="9600">9600</option>
             <option value="19200">19200</option>
@@ -70,25 +88,25 @@
         </select>
     </div>
     <div class="form-row">
-        <label for="node-config-input-dataBits"><i class="fa fa-bars"></i> Datenbits</label>
+        <label for="node-config-input-dataBits"><i class="fa fa-bars"></i> Data Bits</label>
         <select id="node-config-input-dataBits">
             <option value="7">7</option>
             <option value="8">8</option>
         </select>
     </div>
     <div class="form-row">
-        <label for="node-config-input-stopBits"><i class="fa fa-stop"></i> Stopbits</label>
+        <label for="node-config-input-stopBits"><i class="fa fa-stop"></i> Stop Bits</label>
         <select id="node-config-input-stopBits">
             <option value="1">1</option>
             <option value="2">2</option>
         </select>
     </div>
     <div class="form-row">
-        <label for="node-config-input-parity"><i class="fa fa-check-square"></i> Parität</label>
+        <label for="node-config-input-parity"><i class="fa fa-check-square"></i> Parity</label>
         <select id="node-config-input-parity">
-            <option value="none">Keine</option>
-            <option value="even">Gerade (Even)</option>
-            <option value="odd">Ungerade (Odd)</option>
+            <option value="none">None</option>
+            <option value="even">Even</option>
+            <option value="odd">Odd</option>
         </select>
     </div>
 </script>
@@ -97,7 +115,7 @@
 <script type="text/javascript">
     RED.nodes.registerType('clab-serial-in', {
         category: 'CompuLab',
-        color: '#6B8E9F',
+        color: '#8BADC4',
         defaults: {
             name: { value: '' },
             serial: { value: '', type: 'clab-serial-config', required: true },
@@ -127,45 +145,54 @@
         <input type="text" id="node-input-serial">
     </div>
     <div class="form-row">
-        <label for="node-input-outputFormat"><i class="fa fa-file-text"></i> Ausgabeformat</label>
+        <label for="node-input-outputFormat"><i class="fa fa-file-text"></i> Output Format</label>
         <select id="node-input-outputFormat">
             <option value="string">String</option>
             <option value="buffer">Buffer</option>
-            <option value="json">JSON (wenn möglich)</option>
+            <option value="json">JSON (if possible)</option>
         </select>
     </div>
     <div class="form-row">
-        <label for="node-input-delimiter"><i class="fa fa-cut"></i> Trennzeichen</label>
+        <label for="node-input-delimiter"><i class="fa fa-cut"></i> Delimiter</label>
         <input type="text" id="node-input-delimiter" placeholder="\n">
     </div>
 </script>
 
 <script type="text/html" data-help-name="clab-serial-in">
-    <p>Empfängt Daten von einem seriellen Port (RS232/RS485).</p>
+    <p>Receives data from a serial port (RS232/RS485).</p>
     
-    <h3>Ausgabe</h3>
+    <h3>Output</h3>
     <dl class="message-properties">
         <dt>payload <span class="property-type">string | buffer | object</span></dt>
-        <dd>Die empfangenen Daten</dd>
+        <dd>The received data</dd>
         <dt>port <span class="property-type">string</span></dt>
-        <dd>Der Port von dem die Daten kamen</dd>
+        <dd>The port from which data was received</dd>
         <dt>timestamp <span class="property-type">number</span></dt>
-        <dd>Unix Timestamp</dd>
+        <dd>Unix timestamp</dd>
     </dl>
     
     <h3>Details</h3>
-    <p>Dieser Node empfängt Daten vom konfigurierten seriellen Port.
-    Die Daten können als String, Buffer oder JSON ausgegeben werden.</p>
+    <p>This node receives data from the configured serial port.
+    Data can be output as String, Buffer or JSON.</p>
     
-    <p>Bei String-Ausgabe kann ein Trennzeichen definiert werden,
-    bei dem die Nachricht aufgeteilt wird (z.B. \n für Zeilenumbruch).</p>
+    <p>For String output, a delimiter can be defined
+    to split the message (e.g. \n for newline).</p>
+    
+    <h3>Multiple Serial Ports Support</h3>
+    <p>CompuLab devices support multiple serial ports and add-on modules:</p>
+    <ul>
+        <li><b>IOT-GATE-iMX8/IMX8PLUS</b>: Backpanel + 2 Add-on ports (RS232/RS485)</li>
+        <li><b>IOT-LINK</b>: 2x RS485 (FARS4 + FBRS4)</li>
+        <li><b>IOT-GATE-RPi</b>: 4x RS485 ports</li>
+    </ul>
+    <p>Each port requires its own configuration node and can be used independently.</p>
 </script>
 
 <!-- CompuLab Serial Out Node -->
 <script type="text/javascript">
     RED.nodes.registerType('clab-serial-out', {
         category: 'CompuLab',
-        color: '#6B8E9F',
+        color: '#8BADC4',
         defaults: {
             name: { value: '' },
             serial: { value: '', type: 'clab-serial-config', required: true },
@@ -197,29 +224,29 @@
     <div class="form-row">
         <label>&nbsp;</label>
         <input type="checkbox" id="node-input-appendNewline" style="width:auto; vertical-align:top">
-        <label for="node-input-appendNewline" style="width:auto"> Zeilenumbruch anhängen</label>
+        <label for="node-input-appendNewline" style="width:auto"> Append newline</label>
     </div>
 </script>
 
 <script type="text/html" data-help-name="clab-serial-out">
-    <p>Sendet Daten an einen seriellen Port (RS232/RS485).</p>
+    <p>Sends data to a serial port (RS232/RS485).</p>
     
-    <h3>Eingabe</h3>
+    <h3>Input</h3>
     <dl class="message-properties">
         <dt>payload <span class="property-type">string | buffer | object</span></dt>
-        <dd>Die zu sendenden Daten</dd>
+        <dd>The data to send</dd>
     </dl>
     
     <h3>Details</h3>
-    <p>Sendet die Payload an den konfigurierten seriellen Port.
-    Strings werden in UTF-8 konvertiert, Objekte werden als JSON gesendet.</p>
+    <p>Sends the payload to the configured serial port.
+    Strings are converted to UTF-8, objects are sent as JSON.</p>
 </script>
 
 <!-- CompuLab UART Mode Node -->
 <script type="text/javascript">
     RED.nodes.registerType('clab-uart-mode', {
         category: 'CompuLab',
-        color: '#6B8E9F',
+        color: '#8BADC4',
         defaults: {
             name: { value: '' },
             mode: { value: 'rs232' }
@@ -243,7 +270,7 @@
         <input type="text" id="node-input-name" placeholder="Name">
     </div>
     <div class="form-row">
-        <label for="node-input-mode"><i class="fa fa-exchange"></i> Modus</label>
+        <label for="node-input-mode"><i class="fa fa-exchange"></i> Mode</label>
         <select id="node-input-mode">
             <option value="rs232">RS232</option>
             <option value="rs485">RS485</option>
@@ -252,23 +279,23 @@
 </script>
 
 <script type="text/html" data-help-name="clab-uart-mode">
-    <p>Setzt den UART-Modus des Backpanel-Ports (RS232 oder RS485).</p>
+    <p>Sets the UART mode of the backpanel port (RS232 or RS485).</p>
     
-    <h3>Eingabe</h3>
+    <h3>Input</h3>
     <dl class="message-properties">
         <dt class="optional">payload <span class="property-type">string</span></dt>
-        <dd>"rs232" oder "rs485" - überschreibt den konfigurierten Modus</dd>
+        <dd>"rs232" or "rs485" - overrides the configured mode</dd>
     </dl>
     
-    <h3>Ausgabe</h3>
+    <h3>Output</h3>
     <dl class="message-properties">
         <dt>payload <span class="property-type">object</span></dt>
-        <dd>Ergebnis der Modus-Änderung</dd>
+        <dd>Result of mode change</dd>
         <dt>mode <span class="property-type">string</span></dt>
-        <dd>Der gesetzte Modus</dd>
+        <dd>The set mode</dd>
     </dl>
     
     <h3>Details</h3>
-    <p>Der IOT-GATE-iMX8 Backpanel-Port kann zwischen RS232 und RS485 
-    umgeschaltet werden. Dieser Node steuert den GPIO, der den Modus wechselt.</p>
+    <p>The IOT-GATE-iMX8 backpanel port can be switched between RS232 and RS485.
+    This node controls the GPIO that switches the mode.</p>
 </script>

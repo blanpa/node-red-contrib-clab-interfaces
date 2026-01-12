@@ -2,7 +2,7 @@
 <script type="text/javascript">
     RED.nodes.registerType('clab-gpio-in', {
         category: 'CompuLab',
-        color: '#6B8E9F',
+        color: '#8BADC4',
         defaults: {
             name: { value: '' },
             pin: { value: 'IN0', required: true },
@@ -29,9 +29,9 @@
         <input type="text" id="node-input-name" placeholder="Name">
     </div>
     <div class="form-row">
-        <label for="node-input-deviceType"><i class="fa fa-microchip"></i> Gerät</label>
+        <label for="node-input-deviceType"><i class="fa fa-microchip"></i> Device</label>
         <select id="node-input-deviceType">
-            <option value="auto">Auto-Erkennung</option>
+            <option value="auto">Auto-detect</option>
             <option value="IOT-GATE-iMX8">IOT-GATE-iMX8</option>
             <option value="SBC-IOT-iMX8">SBC-IOT-iMX8</option>
             <option value="IOT-GATE-IMX8PLUS">IOT-GATE-IMX8PLUS</option>
@@ -44,17 +44,37 @@
     <div class="form-row">
         <label for="node-input-pin"><i class="fa fa-plug"></i> Pin</label>
         <select id="node-input-pin">
-            <optgroup label="IOT-GATE-iMX8 / IMX8PLUS">
+            <optgroup label="IOT-GATE-iMX8 / IMX8PLUS Base">
                 <option value="IN0">IN0 (Pin 15)</option>
                 <option value="IN1">IN1 (Pin 17)</option>
                 <option value="IN2">IN2 (Pin 16)</option>
                 <option value="IN3">IN3 (Pin 18)</option>
             </optgroup>
-            <optgroup label="IOT-DIN-IMX8PLUS">
-                <option value="DI0">DI0 (Digital Input 0)</option>
-                <option value="DI1">DI1 (Digital Input 1)</option>
+            <optgroup label="IOT-DIN-IMX8PLUS Base (2 inputs)">
+                <option value="DI0">DI0 (Base Input 0)</option>
+                <option value="DI1">DI1 (Base Input 1)</option>
             </optgroup>
-            <optgroup label="IOT-LINK">
+            <optgroup label="IOT-DIN-IMX8PLUS + IFM-DI8O8 Module A">
+                <option value="DI2">DI2 (Module A, In 0)</option>
+                <option value="DI3">DI3 (Module A, In 1)</option>
+                <option value="DI4">DI4 (Module A, In 2)</option>
+                <option value="DI5">DI5 (Module A, In 3)</option>
+                <option value="DI6">DI6 (Module A, In 4)</option>
+                <option value="DI7">DI7 (Module A, In 5)</option>
+                <option value="DI8">DI8 (Module A, In 6)</option>
+                <option value="DI9">DI9 (Module A, In 7)</option>
+            </optgroup>
+            <optgroup label="IFM-DI8O8 Additional Modules">
+                <option value="DI10">DI10 (Module B, In 0)</option>
+                <option value="DI18">DI18 (Module C, In 0)</option>
+                <option value="DI26">DI26 (Module D, In 0)</option>
+                <option value="DI34">DI34 (Module E, In 0)</option>
+                <option value="DI42">DI42 (Module F, In 0)</option>
+                <option value="DI50">DI50 (Module G, In 0)</option>
+                <option value="DI58">DI58 (Module H, In 0)</option>
+                <option value="DI65">DI65 (Module H, In 7 - last)</option>
+            </optgroup>
+            <optgroup label="IOT-LINK (separate device)">
                 <option value="DIO0">DIO0 (Digital I/O 0)</option>
                 <option value="DIO1">DIO1 (Digital I/O 1)</option>
                 <option value="DIO2">DIO2 (Digital I/O 2)</option>
@@ -62,43 +82,105 @@
         </select>
     </div>
     <div class="form-row">
-        <label for="node-input-interval"><i class="fa fa-clock-o"></i> Intervall (ms)</label>
+        <label for="node-input-interval"><i class="fa fa-clock-o"></i> Interval (ms)</label>
         <input type="number" id="node-input-interval" min="100" step="100">
     </div>
     <div class="form-row">
         <label>&nbsp;</label>
         <input type="checkbox" id="node-input-outputOnChange" style="width:auto; vertical-align:top">
-        <label for="node-input-outputOnChange" style="width:auto"> Nur bei Änderung senden</label>
+        <label for="node-input-outputOnChange" style="width:auto"> Send only on change</label>
     </div>
 </script>
 
 <script type="text/html" data-help-name="clab-gpio-in">
-    <p>Liest digitale Eingänge von CompuLab IoT Gateways.</p>
+    <p>Reads digital inputs from CompuLab IoT Gateways.</p>
     
-    <h3>Ausgabe</h3>
+    <h3>Output</h3>
     <dl class="message-properties">
         <dt>payload <span class="property-type">number</span></dt>
-        <dd>Der Zustand des Eingangs (0 oder 1)</dd>
+        <dd>The state of the input (0 or 1)</dd>
         <dt>pin <span class="property-type">string</span></dt>
-        <dd>Der Name des Pins (z.B. IN0)</dd>
+        <dd>The name of the pin (e.g. IN0)</dd>
         <dt>device <span class="property-type">string</span></dt>
-        <dd>Der erkannte Gerätetyp</dd>
+        <dd>The detected device type</dd>
         <dt>timestamp <span class="property-type">number</span></dt>
-        <dd>Unix Timestamp der Messung</dd>
+        <dd>Unix timestamp of the reading</dd>
+    </dl>
+    
+    <h3>Input</h3>
+    <dl class="message-properties">
+        <dt class="optional">trigger <span class="property-type">any</span></dt>
+        <dd>Any message triggers a manual read</dd>
+        <dt class="optional">pin <span class="property-type">string</span></dt>
+        <dd>Pin name to read (DI0-DI63 for IFM-DI8O8 modules, overrides configuration)</dd>
     </dl>
     
     <h3>Details</h3>
-    <p>Dieser Node liest zyklisch den Zustand eines digitalen Eingangs.
-    Bei aktivierter Option "Nur bei Änderung senden" wird nur bei 
-    Zustandsänderung eine Nachricht gesendet.</p>
+    <p>This node cyclically reads the state of a digital input.
+    With the "Send only on change" option enabled, a message is only sent
+    when the state changes.</p>
     
-    <p>Unterstützte Geräte:</p>
+    <h4>Examples:</h4>
+    <p><b>Reading a specific input from Module C:</b></p>
+    <pre>msg.pin = "DI16";  // First input of Module C
+return msg;</pre>
+    
+    <p><b>Scanning all 64 inputs sequentially:</b></p>
+    <pre>var inputNum = context.get('inputNum') || 0;
+msg.pin = "DI" + inputNum;
+
+inputNum = (inputNum + 1) % 64;
+context.set('inputNum', inputNum);
+
+return msg;</pre>
+    
+    <h3>Multiple I/O Modules Support</h3>
+    <p>The <a href="https://www.compulab.com/products/iot-gateways/iot-din-imx8plus-industrial-iot-gateway/#io_modules">IOT-DIN-IMX8PLUS</a> 
+    supports stacking up to <b>8× IFM-DI8O8 modules</b>, providing massive digital I/O capacity:</p>
+    
+    <h4>IOT-DIN-IMX8PLUS Digital I/O Capacity</h4>
     <ul>
-        <li><b>IOT-GATE-iMX8 / SBC-IOT-iMX8</b> - 4 Eingänge (IN0-IN3)</li>
-        <li><b>IOT-GATE-IMX8PLUS / SBC-IOT-IMX8PLUS</b> - 4 Eingänge (IN0-IN3)</li>
-        <li><b>IOT-DIN-IMX8PLUS</b> - 2 Eingänge (DI0-DI1)</li>
+        <li><b>Base Gateway</b>: 2 DI + 2 DO (DI0-DI1, DO0-DO1)</li>
+        <li><b>+ 8× IFM-DI8O8 Modules</b>: 64 DI + 64 DO (DI0-DI63, DO0-DO63)</li>
+        <li><b>Total Maximum</b>: 66 Digital Inputs + 66 Digital Outputs</li>
+        <li><b>Industrial Grade</b>: 24V compliant with EN 61131-2, isolated</li>
+    </ul>
+    
+    <h4>Pin Naming Convention</h4>
+    <table border="1" style="border-collapse: collapse; margin: 10px 0;">
+        <tr style="background: #f0f0f0;">
+            <th style="padding: 5px;">Module Position</th>
+            <th style="padding: 5px;">Digital Inputs</th>
+            <th style="padding: 5px;">Digital Outputs</th>
+        </tr>
+        <tr>
+            <td style="padding: 5px;">Module A (Position A)</td>
+            <td style="padding: 5px;">DI0 - DI7</td>
+            <td style="padding: 5px;">DO0 - DO7</td>
+        </tr>
+        <tr>
+            <td style="padding: 5px;">Module B (Position B)</td>
+            <td style="padding: 5px;">DI8 - DI15</td>
+            <td style="padding: 5px;">DO8 - DO15</td>
+        </tr>
+        <tr>
+            <td style="padding: 5px;">Module C (Position C)</td>
+            <td style="padding: 5px;">DI16 - DI23</td>
+            <td style="padding: 5px;">DO16 - DO23</td>
+        </tr>
+        <tr>
+            <td style="padding: 5px;">... up to Module H</td>
+            <td style="padding: 5px;">DI56 - DI63</td>
+            <td style="padding: 5px;">DO56 - DO63</td>
+        </tr>
+    </table>
+    
+    <h4>Other CompuLab Devices</h4>
+    <ul>
+        <li><b>IOT-GATE-iMX8 / SBC-IOT-iMX8</b> - 4 inputs (IN0-IN3) + optional I/O add-on</li>
+        <li><b>IOT-GATE-IMX8PLUS / SBC-IOT-IMX8PLUS</b> - 4 inputs (IN0-IN3) + optional I/O add-on</li>
         <li><b>IOT-LINK</b> - 3 Digital I/Os (DIO0-DIO2)</li>
-        <li><b>IOT-GATE-RPi</b> - 8 Eingänge (IN0-IN7)</li>
+        <li><b>IOT-GATE-RPi</b> - 8 inputs (IN0-IN7)</li>
     </ul>
 </script>
 
@@ -106,7 +188,7 @@
 <script type="text/javascript">
     RED.nodes.registerType('clab-gpio-out', {
         category: 'CompuLab',
-        color: '#6B8E9F',
+        color: '#8BADC4',
         defaults: {
             name: { value: '' },
             pin: { value: 'OUT0', required: true },
@@ -133,9 +215,9 @@
         <input type="text" id="node-input-name" placeholder="Name">
     </div>
     <div class="form-row">
-        <label for="node-input-deviceType"><i class="fa fa-microchip"></i> Gerät</label>
+        <label for="node-input-deviceType"><i class="fa fa-microchip"></i> Device</label>
         <select id="node-input-deviceType">
-            <option value="auto">Auto-Erkennung</option>
+            <option value="auto">Auto-detect</option>
             <option value="IOT-GATE-iMX8">IOT-GATE-iMX8</option>
             <option value="SBC-IOT-iMX8">SBC-IOT-iMX8</option>
             <option value="IOT-GATE-IMX8PLUS">IOT-GATE-IMX8PLUS</option>
@@ -148,17 +230,37 @@
     <div class="form-row">
         <label for="node-input-pin"><i class="fa fa-plug"></i> Pin</label>
         <select id="node-input-pin">
-            <optgroup label="IOT-GATE-iMX8 / IMX8PLUS">
+            <optgroup label="IOT-GATE-iMX8 / IMX8PLUS Base">
                 <option value="OUT0">OUT0 (Pin 11)</option>
                 <option value="OUT1">OUT1 (Pin 13)</option>
                 <option value="OUT2">OUT2 (Pin 12)</option>
                 <option value="OUT3">OUT3 (Pin 14)</option>
             </optgroup>
-            <optgroup label="IOT-DIN-IMX8PLUS">
-                <option value="DO0">DO0 (Digital Output 0)</option>
-                <option value="DO1">DO1 (Digital Output 1)</option>
+            <optgroup label="IOT-DIN-IMX8PLUS Base (2 outputs)">
+                <option value="DO0">DO0 (Base Output 0)</option>
+                <option value="DO1">DO1 (Base Output 1)</option>
             </optgroup>
-            <optgroup label="IOT-LINK">
+            <optgroup label="IOT-DIN-IMX8PLUS + IFM-DI8O8 Module A">
+                <option value="DO2">DO2 (Module A, Out 0)</option>
+                <option value="DO3">DO3 (Module A, Out 1)</option>
+                <option value="DO4">DO4 (Module A, Out 2)</option>
+                <option value="DO5">DO5 (Module A, Out 3)</option>
+                <option value="DO6">DO6 (Module A, Out 4)</option>
+                <option value="DO7">DO7 (Module A, Out 5)</option>
+                <option value="DO8">DO8 (Module A, Out 6)</option>
+                <option value="DO9">DO9 (Module A, Out 7)</option>
+            </optgroup>
+            <optgroup label="IFM-DI8O8 Additional Modules">
+                <option value="DO10">DO10 (Module B, Out 0)</option>
+                <option value="DO18">DO18 (Module C, Out 0)</option>
+                <option value="DO26">DO26 (Module D, Out 0)</option>
+                <option value="DO34">DO34 (Module E, Out 0)</option>
+                <option value="DO42">DO42 (Module F, Out 0)</option>
+                <option value="DO50">DO50 (Module G, Out 0)</option>
+                <option value="DO58">DO58 (Module H, Out 0)</option>
+                <option value="DO65">DO65 (Module H, Out 7 - last)</option>
+            </optgroup>
+            <optgroup label="IOT-LINK (separate device)">
                 <option value="DIO0">DIO0 (Digital I/O 0)</option>
                 <option value="DIO1">DIO1 (Digital I/O 1)</option>
                 <option value="DIO2">DIO2 (Digital I/O 2)</option>
@@ -168,10 +270,10 @@
     <div class="form-row">
         <label>&nbsp;</label>
         <input type="checkbox" id="node-input-setInitial" style="width:auto; vertical-align:top">
-        <label for="node-input-setInitial" style="width:auto"> Initialwert setzen</label>
+        <label for="node-input-setInitial" style="width:auto"> Set initial value</label>
     </div>
     <div class="form-row">
-        <label for="node-input-initialValue"><i class="fa fa-power-off"></i> Initialwert</label>
+        <label for="node-input-initialValue"><i class="fa fa-power-off"></i> Initial Value</label>
         <select id="node-input-initialValue">
             <option value="low">LOW (0)</option>
             <option value="high">HIGH (1)</option>
@@ -180,34 +282,58 @@
 </script>
 
 <script type="text/html" data-help-name="clab-gpio-out">
-    <p>Setzt digitale Ausgänge von CompuLab IoT Gateways.</p>
+    <p>Sets digital outputs on CompuLab IoT Gateways.</p>
     
-    <h3>Eingabe</h3>
+    <h3>Input</h3>
     <dl class="message-properties">
         <dt>payload <span class="property-type">number | boolean | string</span></dt>
-        <dd>Der zu setzende Wert (0/1, true/false, "high"/"low")</dd>
+        <dd>The value to set (0/1, true/false, "high"/"low")</dd>
         <dt class="optional">pin <span class="property-type">string</span></dt>
-        <dd>Optionaler Pin-Name überschreibt die Konfiguration</dd>
+        <dd>Pin name (DO0-DO63 for IFM-DI8O8 modules, overrides configuration)</dd>
     </dl>
     
-    <h3>Ausgabe</h3>
+    <h3>Output</h3>
     <dl class="message-properties">
         <dt>payload <span class="property-type">number</span></dt>
-        <dd>Der gesetzte Wert (0 oder 1)</dd>
+        <dd>The set value (0 or 1)</dd>
         <dt>pin <span class="property-type">string</span></dt>
-        <dd>Der Name des Pins</dd>
+        <dd>The name of the pin</dd>
     </dl>
     
     <h3>Details</h3>
-    <p>Dieser Node setzt den Zustand eines digitalen Ausgangs.
-    Der Wert kann als Zahl, Boolean oder String übergeben werden.</p>
+    <p>This node sets the state of a digital output.
+    The value can be passed as number, boolean or string.</p>
+    
+    <h4>Examples:</h4>
+    <p><b>Control a specific relay on Module D:</b></p>
+    <pre>msg.pin = "DO24";    // First output of Module D
+msg.payload = true;  // Turn ON
+return msg;</pre>
+    
+    <p><b>Toggle all 64 outputs sequentially:</b></p>
+    <pre>var outputs = 64;
+var current = context.get('current') || 0;
+
+// Turn off previous
+if (current > 0) {
+    node.send({pin: "DO" + (current-1), payload: false});
+}
+
+// Turn on current
+msg.pin = "DO" + current;
+msg.payload = true;
+
+current = (current + 1) % outputs;
+context.set('current', current);
+
+return msg;</pre>
 </script>
 
 <!-- CompuLab GPIO Read All Node -->
 <script type="text/javascript">
     RED.nodes.registerType('clab-gpio-read-all', {
         category: 'CompuLab',
-        color: '#6B8E9F',
+        color: '#8BADC4',
         defaults: {
             name: { value: '' },
             deviceType: { value: 'auto' }
@@ -231,9 +357,9 @@
         <input type="text" id="node-input-name" placeholder="Name">
     </div>
     <div class="form-row">
-        <label for="node-input-deviceType"><i class="fa fa-microchip"></i> Gerät</label>
+        <label for="node-input-deviceType"><i class="fa fa-microchip"></i> Device</label>
         <select id="node-input-deviceType">
-            <option value="auto">Auto-Erkennung</option>
+            <option value="auto">Auto-detect</option>
             <option value="IOT-GATE-iMX8">IOT-GATE-iMX8</option>
             <option value="SBC-IOT-iMX8">SBC-IOT-iMX8</option>
             <option value="IOT-GATE-RPi">IOT-GATE-RPi</option>
@@ -242,15 +368,15 @@
 </script>
 
 <script type="text/html" data-help-name="clab-gpio-read-all">
-    <p>Liest alle digitalen Eingänge auf einmal.</p>
+    <p>Reads all digital inputs at once.</p>
     
-    <h3>Ausgabe</h3>
+    <h3>Output</h3>
     <dl class="message-properties">
         <dt>payload <span class="property-type">object</span></dt>
-        <dd>Objekt mit allen Eingangswerten: { IN0: 0, IN1: 1, ... }</dd>
+        <dd>Object with all input values: { IN0: 0, IN1: 1, ... }</dd>
     </dl>
     
     <h3>Details</h3>
-    <p>Dieser Node liest bei jeder eingehenden Nachricht alle 
-    verfügbaren digitalen Eingänge und gibt sie als Objekt zurück.</p>
+    <p>This node reads all available digital inputs on each incoming message
+    and returns them as an object.</p>
 </script>

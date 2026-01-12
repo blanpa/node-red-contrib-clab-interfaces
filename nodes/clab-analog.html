@@ -2,7 +2,7 @@
 <script type="text/javascript">
     RED.nodes.registerType('clab-analog-in', {
         category: 'CompuLab',
-        color: '#6B8E9F',
+        color: '#8BADC4',
         defaults: {
             name: { value: '' },
             deviceIndex: { value: 0 },
@@ -81,9 +81,10 @@
     
     <div class="form-row">
         <label for="node-input-deviceIndex"><i class="fa fa-microchip"></i> Device</label>
-        <input type="number" id="node-input-deviceIndex" min="0" max="10" style="width: 60px;">
+        <input type="number" id="node-input-deviceIndex" min="0" max="7" style="width: 60px;">
         <label for="node-input-channelIndex" style="width: 60px; margin-left: 20px;">Channel</label>
-        <input type="number" id="node-input-channelIndex" min="0" max="10" style="width: 60px;">
+        <input type="number" id="node-input-channelIndex" min="0" max="7" style="width: 60px;">
+        <span style="margin-left: 10px; color: #999; font-size: 0.9em;">(0-7 for IOT-DIN-IMX8PLUS)</span>
     </div>
     
     <div class="form-row voltage-options">
@@ -142,6 +143,50 @@
 
 <script type="text/html" data-help-name="clab-analog-in">
     <p>Reads analog inputs from CompuLab IoT Gateway.</p>
+    
+    <h3>Input</h3>
+    <dl class="message-properties">
+        <dt class="optional">trigger <span class="property-type">any</span></dt>
+        <dd>Any message triggers a manual read</dd>
+        <dt class="optional">deviceIndex <span class="property-type">number</span></dt>
+        <dd>ADC device index (0-10, overrides configuration) - for multiple ADC modules</dd>
+        <dt class="optional">channelIndex <span class="property-type">number</span></dt>
+        <dd>ADC channel index (0-10, overrides configuration) - for multiple channels per device</dd>
+    </dl>
+    
+    <h3>Multiple Modules Support</h3>
+    <p>The <a href="https://www.compulab.com/products/iot-gateways/iot-din-imx8plus-industrial-iot-gateway/#io_modules">IOT-DIN-IMX8PLUS</a> 
+    supports stacking up to <b>8× IFM-ADC8 modules</b>, providing <b>64 analog input channels</b> total:</p>
+    <ul>
+        <li><b>Device Index (0-7)</b>: Selects which IFM-ADC8 module (Position A-H)</li>
+        <li><b>Channel Index (0-7)</b>: Selects which channel on that module (8 channels per module)</li>
+        <li><b>Total Capacity</b>: 8 modules × 8 channels = 64 analog inputs</li>
+    </ul>
+    
+    <h4>Examples:</h4>
+    <p><b>Single channel read:</b></p>
+    <pre>// Module A (0), Channel 3
+msg.deviceIndex = 0;
+msg.channelIndex = 3;
+return msg;</pre>
+    
+    <p><b>Scanning all 64 channels:</b></p>
+    <pre>var device = context.get('device') || 0;
+var channel = context.get('channel') || 0;
+
+msg.deviceIndex = device;
+msg.channelIndex = channel;
+
+// Next channel
+channel++;
+if (channel >= 8) {
+    channel = 0;
+    device = (device + 1) % 8;
+}
+
+context.set('device', device);
+context.set('channel', channel);
+return msg;</pre>
     
     <h3>Input Types</h3>
     <ul>
@@ -236,7 +281,7 @@
 <script type="text/javascript">
     RED.nodes.registerType('clab-analog-devices', {
         category: 'CompuLab',
-        color: '#6B8E9F',
+        color: '#8BADC4',
         defaults: {
             name: { value: '' }
         },

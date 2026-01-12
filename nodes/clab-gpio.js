@@ -1,13 +1,13 @@
 /**
- * CompuLab GPIO Node für Node-RED
- * Digital Input/Output für IOT-GATE-iMX8, SBC-IOT-iMX8, IOT-GATE-RPi
+ * CompuLab GPIO Node for Node-RED
+ * Digital Input/Output for IOT-GATE-iMX8, SBC-IOT-iMX8, IOT-GATE-RPi
  */
 
 module.exports = function(RED) {
     const GPIOHelper = require('../lib/gpio-helper');
 
     // ============================================
-    // GPIO Input Node - Liest digitale Eingänge
+    // GPIO Input Node - Reads digital inputs
     // ============================================
     function ClabGpioInNode(config) {
         RED.nodes.createNode(this, config);
@@ -18,7 +18,7 @@ module.exports = function(RED) {
         node.deviceType = config.deviceType || 'auto';
         node.outputOnChange = config.outputOnChange !== false;
         
-        // Gerät erkennen oder verwenden
+        // Detect or use device
         const detectedType = node.deviceType === 'auto' 
             ? GPIOHelper.detectDevice() 
             : node.deviceType;
@@ -27,15 +27,15 @@ module.exports = function(RED) {
         node.lastValue = null;
         node.timer = null;
 
-        node.status({ fill: 'yellow', shape: 'dot', text: 'Initialisiere...' });
+        node.status({ fill: 'yellow', shape: 'dot', text: 'Initializing...' });
 
-        // Polling Funktion
-        const readInput = () => {
+        // Polling function
+        const readInput = (forceOutput = false) => {
             try {
                 const value = node.gpio.readInput(node.pin);
                 
-                // Nur senden wenn sich der Wert geändert hat (oder immer, je nach Config)
-                if (!node.outputOnChange || value !== node.lastValue) {
+                // Send if forced (manual trigger) or value changed (or always, depending on config)
+                if (forceOutput || !node.outputOnChange || value !== node.lastValue) {
                     node.lastValue = value;
                     
                     const msg = {
@@ -51,25 +51,57 @@ module.exports = function(RED) {
                         shape: 'dot', 
                         text: `${node.pin}: ${value}` 
                     });
+                    
+                    return msg;
                 }
+                return null;
             } catch (err) {
                 node.status({ fill: 'red', shape: 'ring', text: err.message });
                 node.error(err.message);
+                return null;
             }
         };
 
-        // Starte Polling
+        // Start polling
         if (node.pin) {
             readInput();
             node.timer = setInterval(readInput, node.interval);
-            node.status({ fill: 'green', shape: 'dot', text: `${node.pin} aktiv` });
+            node.status({ fill: 'green', shape: 'dot', text: `${node.pin} active` });
         } else {
-            node.status({ fill: 'red', shape: 'ring', text: 'Kein Pin konfiguriert' });
+            node.status({ fill: 'red', shape: 'ring', text: 'No pin configured' });
         }
 
-        // Input Handler - ermöglicht manuelles Triggern
-        node.on('input', (msg) => {
-            readInput();
+        // Input handler - allows manual triggering and dynamic pin selection
+        node.on('input', (msg, send, done) => {
+            try {
+                // Allow dynamic pin selection via msg.pin
+                const pinToRead = msg.pin || node.pin;
+                
+                // Read the input (force output on manual trigger)
+                const value = node.gpio.readInput(pinToRead);
+                
+                const outputMsg = {
+                    payload: value,
+                    pin: pinToRead,
+                    device: detectedType,
+                    timestamp: Date.now()
+                };
+                
+                send = send || node.send;
+                send(outputMsg);
+                
+                node.status({ 
+                    fill: value ? 'green' : 'grey', 
+                    shape: 'dot', 
+                    text: `${pinToRead}: ${value}` 
+                });
+                
+                if (done) done();
+            } catch (err) {
+                node.status({ fill: 'red', shape: 'ring', text: err.message });
+                if (done) done(err);
+                else node.error(err, msg);
+            }
         });
 
         // Cleanup
@@ -83,7 +115,7 @@ module.exports = function(RED) {
     RED.nodes.registerType('clab-gpio-in', ClabGpioInNode);
 
     // ============================================
-    // GPIO Output Node - Setzt digitale Ausgänge
+    // GPIO Output Node - Sets digital outputs
     // ============================================
     function ClabGpioOutNode(config) {
         RED.nodes.createNode(this, config);
@@ -99,9 +131,9 @@ module.exports = function(RED) {
         
         node.gpio = new GPIOHelper(detectedType);
 
-        node.status({ fill: 'yellow', shape: 'dot', text: 'Initialisiere...' });
+        node.status({ fill: 'yellow', shape: 'dot', text: 'Initializing...' });
 
-        // Setze Initialwert
+        // Set initial value
         if (node.pin && config.setInitial) {
             try {
                 node.gpio.writeOutput(node.pin, node.initialValue);
@@ -120,7 +152,7 @@ module.exports = function(RED) {
             const pin = msg.pin || node.pin;
             let value;
             
-            // Wert interpretieren
+            // Interpret value
             if (typeof msg.payload === 'boolean') {
                 value = msg.payload ? 1 : 0;
             } else if (typeof msg.payload === 'number') {
@@ -140,7 +172,7 @@ module.exports = function(RED) {
                     text: `${pin}: ${value}` 
                 });
 
-                // Bestätigung senden
+                // Send confirmation
                 msg.payload = value;
                 msg.pin = pin;
                 msg.device = detectedType;
@@ -162,7 +194,7 @@ module.exports = function(RED) {
     RED.nodes.registerType('clab-gpio-out', ClabGpioOutNode);
 
     // ============================================
-    // GPIO Read All Node - Liest alle Eingänge
+    // GPIO Read All Node - Reads all inputs
     // ============================================
     function ClabGpioReadAllNode(config) {
         RED.nodes.createNode(this, config);
@@ -176,7 +208,7 @@ module.exports = function(RED) {
         
         node.gpio = new GPIOHelper(detectedType);
 
-        node.status({ fill: 'blue', shape: 'dot', text: 'Bereit' });
+        node.status({ fill: 'blue', shape: 'dot', text: 'Ready' });
 
         node.on('input', (msg, send, done) => {
             try {
@@ -187,7 +219,7 @@ module.exports = function(RED) {
                 msg.timestamp = Date.now();
                 
                 send(msg);
-                node.status({ fill: 'green', shape: 'dot', text: 'Gelesen' });
+                node.status({ fill: 'green', shape: 'dot', text: 'Read' });
                 
                 if (done) done();
             } catch (err) {
