@@ -1,0 +1,64 @@
+{
+  "name": "node-red-contrib-clab-interfaces",
+  "version": "1.0.0",
+  "description": "Node-RED nodes for CompuLab IoT Gateway interfaces (IOT-GATE-iMX8, SBC-IOT-iMX8, IOT-GATE-RPi)",
+  "keywords": [
+    "node-red",
+    "compulab",
+    "iot-gateway",
+    "imx8",
+    "gpio",
+    "can",
+    "rs485",
+    "rs232",
+    "industrial",
+    "bluetooth",
+    "gps",
+    "lte",
+    "cellular",
+    "wifi"
+  ],
+  "author": "node-red-contrib-clab-interfaces Contributors",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/YOUR_USERNAME/node-red-contrib-clab-interfaces.git"
+  },
+  "bugs": {
+    "url": "https://github.com/YOUR_USERNAME/node-red-contrib-clab-interfaces/issues"
+  },
+  "homepage": "https://github.com/YOUR_USERNAME/node-red-contrib-clab-interfaces#readme",
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "scripts": {
+    "test": "mocha test/**/*.test.js",
+    "test:watch": "mocha test/**/*.test.js --watch",
+    "lint": "eslint nodes lib"
+  },
+  "devDependencies": {
+    "mocha": "^10.2.0",
+    "eslint": "^8.50.0"
+  },
+  "dependencies": {
+    "serialport": "^12.0.0",
+    "socketcan": "^3.0.0"
+  },
+  "node-red": {
+    "version": ">=2.0.0",
+    "nodes": {
+      "clab-gpio": "nodes/clab-gpio.js",
+      "clab-serial": "nodes/clab-serial.js",
+      "clab-can": "nodes/clab-can.js",
+      "clab-analog": "nodes/clab-analog.js",
+      "clab-led": "nodes/clab-led.js",
+      "clab-system": "nodes/clab-system.js",
+      "clab-bluetooth": "nodes/clab-bluetooth.js",
+      "clab-gps": "nodes/clab-gps.js",
+      "clab-cellular": "nodes/clab-cellular.js",
+      "clab-wifi": "nodes/clab-wifi.js",
+      "clab-ethernet": "nodes/clab-ethernet.js",
+      "clab-network": "nodes/clab-network.js"
+    }
+  }
+}

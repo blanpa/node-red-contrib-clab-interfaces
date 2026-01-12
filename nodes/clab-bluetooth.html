@@ -1,0 +1,83 @@
+<!-- CompuLab Bluetooth Node -->
+<script type="text/javascript">
+    RED.nodes.registerType('clab-bluetooth', {
+        category: 'CompuLab',
+        color: '#6B8E9F',
+        defaults: {
+            name: { value: '' },
+            action: { value: 'status' },
+            duration: { value: 10 },
+            address: { value: '' }
+        },
+        inputs: 1,
+        outputs: 1,
+        icon: 'icons/clab.svg',
+        label: function() {
+            return this.name || 'Bluetooth';
+        },
+        paletteLabel: 'Bluetooth',
+        labelStyle: function() {
+            return this.name ? 'node_label_italic' : '';
+        }
+    });
+</script>
+
+<script type="text/html" data-template-name="clab-bluetooth">
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+    <div class="form-row">
+        <label for="node-input-action"><i class="fa fa-bluetooth"></i> Aktion</label>
+        <select id="node-input-action">
+            <optgroup label="Adapter">
+                <option value="status">Adapter Status</option>
+                <option value="enable">Aktivieren</option>
+                <option value="disable">Deaktivieren</option>
+            </optgroup>
+            <optgroup label="Geräte">
+                <option value="scan">Scannen</option>
+                <option value="devices">Bekannte Geräte</option>
+            </optgroup>
+            <optgroup label="Verbindung">
+                <option value="connect">Verbinden</option>
+                <option value="disconnect">Trennen</option>
+                <option value="remove">Gerät entfernen</option>
+                <option value="connection-status">Verbindungsstatus</option>
+            </optgroup>
+        </select>
+    </div>
+    <div class="form-row">
+        <label for="node-input-duration"><i class="fa fa-clock-o"></i> Scan-Dauer (s)</label>
+        <input type="number" id="node-input-duration" min="5" max="60">
+    </div>
+    <div class="form-row">
+        <label for="node-input-address"><i class="fa fa-address-card"></i> MAC Adresse</label>
+        <input type="text" id="node-input-address" placeholder="AA:BB:CC:DD:EE:FF">
+    </div>
+</script>
+
+<script type="text/html" data-help-name="clab-bluetooth">
+    <p>Bluetooth-Steuerung für CompuLab IoT Gateway.</p>
+    
+    <h3>Eingabe</h3>
+    <dl class="message-properties">
+        <dt class="optional">action <span class="property-type">string</span></dt>
+        <dd>Aktion (überschreibt Konfiguration)</dd>
+        <dt class="optional">address <span class="property-type">string</span></dt>
+        <dd>MAC Adresse für connect/disconnect</dd>
+        <dt class="optional">duration <span class="property-type">number</span></dt>
+        <dd>Scan-Dauer in Sekunden</dd>
+    </dl>
+    
+    <h3>Aktionen</h3>
+    <ul>
+        <li><b>status</b> - Adapter-Info (Adresse, Status)</li>
+        <li><b>enable/disable</b> - Bluetooth an/aus</li>
+        <li><b>scan</b> - Nach Geräten suchen</li>
+        <li><b>devices</b> - Bekannte Geräte auflisten</li>
+        <li><b>connect</b> - Mit Gerät verbinden</li>
+        <li><b>disconnect</b> - Verbindung trennen</li>
+        <li><b>remove</b> - Gerät aus Liste entfernen</li>
+    </ul>
+</script>

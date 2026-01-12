@@ -1,0 +1,283 @@
+<!-- CompuLab Analog Input Node -->
+<script type="text/javascript">
+    RED.nodes.registerType('clab-analog-in', {
+        category: 'CompuLab',
+        color: '#6B8E9F',
+        defaults: {
+            name: { value: '' },
+            deviceIndex: { value: 0 },
+            channelIndex: { value: 0 },
+            inputType: { value: 'current' },
+            interval: { value: 0 },
+            outputOnChange: { value: false },
+            threshold: { value: 0.1 },
+            useScaling: { value: false },
+            scaleMin: { value: 0 },
+            scaleMax: { value: 100 },
+            scaleUnit: { value: '' },
+            decimals: { value: 2 },
+            maxVoltage: { value: 10 },
+            sensorType: { value: 'PT100' }
+        },
+        inputs: 1,
+        outputs: 1,
+        icon: 'icons/clab.svg',
+        label: function() {
+            return this.name || 'Analog In';
+        },
+        paletteLabel: 'Analog In',
+        labelStyle: function() {
+            return this.name ? 'node_label_italic' : '';
+        },
+        oneditprepare: function() {
+            // Show/hide fields based on input type
+            function updateVisibility() {
+                var inputType = $('#node-input-inputType').val();
+                
+                if (inputType === 'voltage') {
+                    $('.voltage-options').show();
+                    $('.temperature-options').hide();
+                } else if (inputType === 'temperature') {
+                    $('.voltage-options').hide();
+                    $('.temperature-options').show();
+                } else {
+                    $('.voltage-options').hide();
+                    $('.temperature-options').hide();
+                }
+            }
+            
+            $('#node-input-inputType').on('change', updateVisibility);
+            updateVisibility();
+            
+            // Show/hide scaling options
+            function updateScaling() {
+                if ($('#node-input-useScaling').is(':checked')) {
+                    $('.scaling-options').show();
+                } else {
+                    $('.scaling-options').hide();
+                }
+            }
+            
+            $('#node-input-useScaling').on('change', updateScaling);
+            updateScaling();
+        }
+    });
+</script>
+
+<script type="text/html" data-template-name="clab-analog-in">
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+    
+    <div class="form-row">
+        <label for="node-input-inputType"><i class="fa fa-bolt"></i> Input Type</label>
+        <select id="node-input-inputType">
+            <option value="current">4-20mA Current</option>
+            <option value="voltage">0-10V Voltage</option>
+            <option value="temperature">Temperature (PT100/PT1000)</option>
+        </select>
+    </div>
+    
+    <div class="form-row">
+        <label for="node-input-deviceIndex"><i class="fa fa-microchip"></i> Device</label>
+        <input type="number" id="node-input-deviceIndex" min="0" max="10" style="width: 60px;">
+        <label for="node-input-channelIndex" style="width: 60px; margin-left: 20px;">Channel</label>
+        <input type="number" id="node-input-channelIndex" min="0" max="10" style="width: 60px;">
+    </div>
+    
+    <div class="form-row voltage-options">
+        <label for="node-input-maxVoltage"><i class="fa fa-plug"></i> Max Voltage</label>
+        <select id="node-input-maxVoltage">
+            <option value="5">0-5V</option>
+            <option value="10">0-10V</option>
+        </select>
+    </div>
+    
+    <div class="form-row temperature-options">
+        <label for="node-input-sensorType"><i class="fa fa-thermometer"></i> Sensor Type</label>
+        <select id="node-input-sensorType">
+            <option value="PT100">PT100</option>
+            <option value="PT1000">PT1000</option>
+        </select>
+    </div>
+    
+    <div class="form-row">
+        <label for="node-input-interval"><i class="fa fa-clock-o"></i> Interval (ms)</label>
+        <input type="number" id="node-input-interval" min="0" step="100" placeholder="0 = trigger only">
+    </div>
+    
+    <div class="form-row">
+        <label for="node-input-outputOnChange"><i class="fa fa-filter"></i> Output</label>
+        <input type="checkbox" id="node-input-outputOnChange" style="width: auto; margin-right: 10px;">
+        <span>Only on change (threshold below)</span>
+    </div>
+    
+    <div class="form-row">
+        <label for="node-input-threshold"><i class="fa fa-sliders"></i> Threshold</label>
+        <input type="number" id="node-input-threshold" min="0" step="0.01">
+    </div>
+    
+    <div class="form-row">
+        <label for="node-input-useScaling"><i class="fa fa-arrows-v"></i> Scaling</label>
+        <input type="checkbox" id="node-input-useScaling" style="width: auto; margin-right: 10px;">
+        <span>Enable value scaling</span>
+    </div>
+    
+    <div class="scaling-options">
+        <div class="form-row" style="margin-left: 20px;">
+            <label for="node-input-scaleMin" style="width: 60px;">Min</label>
+            <input type="number" id="node-input-scaleMin" style="width: 80px;" step="any">
+            <label for="node-input-scaleMax" style="width: 40px; margin-left: 10px;">Max</label>
+            <input type="number" id="node-input-scaleMax" style="width: 80px;" step="any">
+        </div>
+        <div class="form-row" style="margin-left: 20px;">
+            <label for="node-input-scaleUnit" style="width: 60px;">Unit</label>
+            <input type="text" id="node-input-scaleUnit" style="width: 80px;" placeholder="e.g. bar, %">
+            <label for="node-input-decimals" style="width: 60px; margin-left: 10px;">Decimals</label>
+            <input type="number" id="node-input-decimals" style="width: 60px;" min="0" max="6">
+        </div>
+    </div>
+</script>
+
+<script type="text/html" data-help-name="clab-analog-in">
+    <p>Reads analog inputs from CompuLab IoT Gateway.</p>
+    
+    <h3>Input Types</h3>
+    <ul>
+        <li><b>4-20mA Current</b> - Industrial current loop sensors</li>
+        <li><b>0-10V Voltage</b> - Voltage input (0-5V or 0-10V)</li>
+        <li><b>Temperature</b> - PT100/PT1000 RTD sensors</li>
+    </ul>
+    
+    <h3>Scaling</h3>
+    <p>Enable scaling to convert the raw sensor value to engineering units.</p>
+    <p>Example: A pressure sensor with 4-20mA output representing 0-10 bar:</p>
+    <ul>
+        <li>Input Type: 4-20mA Current</li>
+        <li>Enable Scaling: Yes</li>
+        <li>Min: 0, Max: 10, Unit: bar</li>
+    </ul>
+    
+    <h3>Output</h3>
+    <dl class="message-properties">
+        <dt>payload <span class="property-type">number</span></dt>
+        <dd>Measured value (scaled if enabled, otherwise converted value)</dd>
+        <dt>raw <span class="property-type">number</span></dt>
+        <dd>Raw ADC value (e.g. 0-4095 for 12-bit ADC)</dd>
+        <dt>percent <span class="property-type">number</span></dt>
+        <dd>Value as percentage (0-100%)</dd>
+        <dt>valid <span class="property-type">boolean</span></dt>
+        <dd>True if value is within expected range</dd>
+        <dt>unit <span class="property-type">string</span></dt>
+        <dd>Unit of the payload value</dd>
+        <dt>inputType <span class="property-type">string</span></dt>
+        <dd>Input type: "current", "voltage", or "temperature"</dd>
+        <dt>device <span class="property-type">string</span></dt>
+        <dd>IIO device name (e.g. "max11108")</dd>
+        <dt>channel <span class="property-type">string</span></dt>
+        <dd>Channel name (e.g. "in_voltage0")</dd>
+        <dt>timestamp <span class="property-type">number</span></dt>
+        <dd>Unix timestamp of the reading</dd>
+    </dl>
+    
+    <h3>Additional fields by input type</h3>
+    <p><b>4-20mA Current:</b></p>
+    <dl class="message-properties">
+        <dt>currentMA <span class="property-type">number</span></dt>
+        <dd>Current in milliamps (4-20 mA)</dd>
+    </dl>
+    
+    <p><b>0-10V Voltage:</b></p>
+    <dl class="message-properties">
+        <dt>voltage <span class="property-type">number</span></dt>
+        <dd>Voltage in volts</dd>
+    </dl>
+    
+    <p><b>Temperature:</b></p>
+    <dl class="message-properties">
+        <dt>celsius <span class="property-type">number</span></dt>
+        <dd>Temperature in °C</dd>
+        <dt>fahrenheit <span class="property-type">number</span></dt>
+        <dd>Temperature in °F</dd>
+        <dt>kelvin <span class="property-type">number</span></dt>
+        <dd>Temperature in K</dd>
+    </dl>
+    
+    <h3>With Scaling enabled</h3>
+    <dl class="message-properties">
+        <dt>scaled <span class="property-type">number</span></dt>
+        <dd>Scaled value in engineering units</dd>
+        <dt>scaleMin <span class="property-type">number</span></dt>
+        <dd>Configured minimum scale value</dd>
+        <dt>scaleMax <span class="property-type">number</span></dt>
+        <dd>Configured maximum scale value</dd>
+    </dl>
+    
+    <h3>Example Output (4-20mA with scaling)</h3>
+    <pre>{
+  "payload": 5.5,
+  "raw": 2048,
+  "currentMA": 12.8,
+  "percent": 55,
+  "scaled": 5.5,
+  "scaleMin": 0,
+  "scaleMax": 10,
+  "unit": "bar",
+  "valid": true,
+  "inputType": "current",
+  "device": "max11108",
+  "channel": "in_current0",
+  "timestamp": 1704067200000
+}</pre>
+</script>
+
+<!-- CompuLab Analog Devices Node -->
+<script type="text/javascript">
+    RED.nodes.registerType('clab-analog-devices', {
+        category: 'CompuLab',
+        color: '#6B8E9F',
+        defaults: {
+            name: { value: '' }
+        },
+        inputs: 1,
+        outputs: 1,
+        icon: 'icons/clab.svg',
+        label: function() {
+            return this.name || 'Analog Devices';
+        },
+        paletteLabel: 'Analog Dev',
+        labelStyle: function() {
+            return this.name ? 'node_label_italic' : '';
+        }
+    });
+</script>
+
+<script type="text/html" data-template-name="clab-analog-devices">
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+</script>
+
+<script type="text/html" data-help-name="clab-analog-devices">
+    <p>Lists all available analog input devices (IIO devices).</p>
+    
+    <h3>Output</h3>
+    <dl class="message-properties">
+        <dt>payload <span class="property-type">array</span></dt>
+        <dd>Array of available ADC devices with channels</dd>
+        <dt>count <span class="property-type">number</span></dt>
+        <dd>Number of devices found</dd>
+        <dt>available <span class="property-type">boolean</span></dt>
+        <dd>True if at least one device is available</dd>
+    </dl>
+    
+    <h3>Device Info</h3>
+    <p>Each device contains:</p>
+    <ul>
+        <li><b>id</b> - Device ID (e.g., iio:device0)</li>
+        <li><b>name</b> - Device name (e.g., max11108)</li>
+        <li><b>channels</b> - Available channels with scale/offset info</li>
+    </ul>
+</script>

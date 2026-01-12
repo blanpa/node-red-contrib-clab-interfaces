@@ -1,0 +1,63 @@
+<!-- CompuLab LED Node -->
+<script type="text/javascript">
+    RED.nodes.registerType('clab-led', {
+        category: 'CompuLab',
+        color: '#6B8E9F',
+        defaults: {
+            name: { value: '' },
+            action: { value: 'on' },
+            interval: { value: 500 }
+        },
+        inputs: 1,
+        outputs: 1,
+        icon: 'icons/clab.svg',
+        label: function() {
+            return this.name || 'LED';
+        },
+        paletteLabel: 'LED',
+        labelStyle: function() {
+            return this.name ? 'node_label_italic' : '';
+        }
+    });
+</script>
+
+<script type="text/html" data-template-name="clab-led">
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+    <div class="form-row">
+        <label for="node-input-action"><i class="fa fa-lightbulb-o"></i> Aktion</label>
+        <select id="node-input-action">
+            <option value="on">Einschalten</option>
+            <option value="off">Ausschalten</option>
+            <option value="toggle">Umschalten</option>
+            <option value="blink">Blinken</option>
+            <option value="status">Status lesen</option>
+        </select>
+    </div>
+    <div class="form-row">
+        <label for="node-input-interval"><i class="fa fa-clock-o"></i> Blink-Intervall (ms)</label>
+        <input type="number" id="node-input-interval" min="100" max="5000" step="100">
+    </div>
+</script>
+
+<script type="text/html" data-help-name="clab-led">
+    <p>Steuert die User LED (DS4) des CompuLab IoT Gateway.</p>
+    
+    <h3>Eingabe</h3>
+    <dl class="message-properties">
+        <dt class="optional">action <span class="property-type">string</span></dt>
+        <dd>on, off, toggle, blink, status</dd>
+        <dt class="optional">payload <span class="property-type">boolean</span></dt>
+        <dd>true = an, false = aus</dd>
+        <dt class="optional">interval <span class="property-type">number</span></dt>
+        <dd>Blink-Intervall in ms (für action: blink)</dd>
+    </dl>
+    
+    <h3>Ausgabe</h3>
+    <dl class="message-properties">
+        <dt>payload.state <span class="property-type">boolean|string</span></dt>
+        <dd>LED Status (true/false oder "blinking")</dd>
+    </dl>
+</script>

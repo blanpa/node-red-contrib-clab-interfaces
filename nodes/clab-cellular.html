@@ -1,0 +1,94 @@
+<!-- CompuLab Cellular Node -->
+<script type="text/javascript">
+    RED.nodes.registerType('clab-cellular', {
+        category: 'CompuLab',
+        color: '#6B8E9F',
+        defaults: {
+            name: { value: '' },
+            action: { value: 'status' },
+            apn: { value: 'internet' },
+            interval: { value: 0 }
+        },
+        inputs: 1,
+        outputs: 1,
+        icon: 'icons/clab.svg',
+        label: function() {
+            return this.name || 'Cellular';
+        },
+        paletteLabel: 'Cellular',
+        labelStyle: function() {
+            return this.name ? 'node_label_italic' : '';
+        }
+    });
+</script>
+
+<script type="text/html" data-template-name="clab-cellular">
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+    <div class="form-row">
+        <label for="node-input-action"><i class="fa fa-signal"></i> Aktion</label>
+        <select id="node-input-action">
+            <optgroup label="Status">
+                <option value="status">Verbindungsstatus</option>
+                <option value="info">Modem Info</option>
+                <option value="sim">SIM Info</option>
+                <option value="signal">Signalstärke</option>
+            </optgroup>
+            <optgroup label="Verbindung">
+                <option value="connect">Verbinden</option>
+                <option value="disconnect">Trennen</option>
+            </optgroup>
+            <optgroup label="Modem">
+                <option value="enable">Modem aktivieren</option>
+                <option value="disable">Modem deaktivieren</option>
+                <option value="reset">Modem Reset</option>
+                <option value="at-command">AT-Befehl senden</option>
+            </optgroup>
+        </select>
+    </div>
+    <div class="form-row">
+        <label for="node-input-apn"><i class="fa fa-globe"></i> APN</label>
+        <input type="text" id="node-input-apn" placeholder="internet">
+    </div>
+    <div class="form-row">
+        <label for="node-input-interval"><i class="fa fa-clock-o"></i> Signal-Intervall (ms)</label>
+        <input type="number" id="node-input-interval" min="0" step="1000" placeholder="0 = kein Auto-Update">
+    </div>
+</script>
+
+<script type="text/html" data-help-name="clab-cellular">
+    <p>LTE/4G Modem-Steuerung für CompuLab IoT Gateway.</p>
+    
+    <h3>Aktionen</h3>
+    
+    <h4>Status</h4>
+    <ul>
+        <li><b>status</b> - Verbindungsstatus (IP, Operator)</li>
+        <li><b>info</b> - Modem-Info (Hersteller, Modell, IMEI)</li>
+        <li><b>sim</b> - SIM-Karten Info (IMSI, ICCID)</li>
+        <li><b>signal</b> - Signalstärke (RSRP, RSRQ, %)</li>
+    </ul>
+    
+    <h4>Verbindung</h4>
+    <ul>
+        <li><b>connect</b> - Mit Netz verbinden</li>
+        <li><b>disconnect</b> - Verbindung trennen</li>
+    </ul>
+    
+    <h4>Modem</h4>
+    <ul>
+        <li><b>enable/disable</b> - Modem an/aus</li>
+        <li><b>reset</b> - Modem neustarten</li>
+        <li><b>at-command</b> - AT-Befehl senden (msg.command)</li>
+    </ul>
+    
+    <h3>Signalstärke</h3>
+    <ul>
+        <li><b>Excellent</b>: RSRP ≥ -80 dBm</li>
+        <li><b>Good</b>: RSRP ≥ -90 dBm</li>
+        <li><b>Fair</b>: RSRP ≥ -100 dBm</li>
+        <li><b>Poor</b>: RSRP < -100 dBm</li>
+    </ul>
+</script>

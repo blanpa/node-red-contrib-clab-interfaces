@@ -1,0 +1,111 @@
+<!-- CompuLab Ethernet Node -->
+<script type="text/javascript">
+    RED.nodes.registerType('clab-ethernet', {
+        category: 'CompuLab',
+        color: '#6B8E9F',
+        defaults: {
+            name: { value: '' },
+            action: { value: 'status' },
+            interface: { value: 'eth0' },
+            ipAddress: { value: '' },
+            netmask: { value: '255.255.255.0' },
+            gateway: { value: '' },
+            dns: { value: '8.8.8.8' }
+        },
+        inputs: 1,
+        outputs: 1,
+        icon: 'icons/clab.svg',
+        label: function() {
+            return this.name || 'Ethernet';
+        },
+        paletteLabel: 'Ethernet',
+        labelStyle: function() {
+            return this.name ? 'node_label_italic' : '';
+        }
+    });
+</script>
+
+<script type="text/html" data-template-name="clab-ethernet">
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+    <div class="form-row">
+        <label for="node-input-action"><i class="fa fa-plug"></i> Aktion</label>
+        <select id="node-input-action">
+            <optgroup label="Status">
+                <option value="status">Interface Status</option>
+                <option value="interfaces">Alle Interfaces</option>
+                <option value="statistics">Statistiken (RX/TX)</option>
+            </optgroup>
+            <optgroup label="Steuerung">
+                <option value="enable">Aktivieren</option>
+                <option value="disable">Deaktivieren</option>
+            </optgroup>
+            <optgroup label="Konfiguration">
+                <option value="dhcp">DHCP aktivieren</option>
+                <option value="static">Statische IP setzen</option>
+            </optgroup>
+        </select>
+    </div>
+    <div class="form-row">
+        <label for="node-input-interface"><i class="fa fa-ethernet"></i> Interface</label>
+        <select id="node-input-interface">
+            <option value="eth0">eth0</option>
+            <option value="eth1">eth1</option>
+            <option value="enp0s3">enp0s3</option>
+        </select>
+    </div>
+    <div class="form-row">
+        <label><i class="fa fa-cog"></i> Statische IP</label>
+    </div>
+    <div class="form-row" style="margin-left: 20px;">
+        <label for="node-input-ipAddress" style="width: 80px;">IP</label>
+        <input type="text" id="node-input-ipAddress" style="width: 200px;" placeholder="192.168.1.100">
+    </div>
+    <div class="form-row" style="margin-left: 20px;">
+        <label for="node-input-netmask" style="width: 80px;">Netmask</label>
+        <input type="text" id="node-input-netmask" style="width: 200px;" placeholder="255.255.255.0">
+    </div>
+    <div class="form-row" style="margin-left: 20px;">
+        <label for="node-input-gateway" style="width: 80px;">Gateway</label>
+        <input type="text" id="node-input-gateway" style="width: 200px;" placeholder="192.168.1.1">
+    </div>
+    <div class="form-row" style="margin-left: 20px;">
+        <label for="node-input-dns" style="width: 80px;">DNS</label>
+        <input type="text" id="node-input-dns" style="width: 200px;" placeholder="8.8.8.8, 8.8.4.4">
+    </div>
+</script>
+
+<script type="text/html" data-help-name="clab-ethernet">
+    <p>Ethernet-Steuerung für CompuLab IoT Gateway.</p>
+    
+    <h3>Aktionen</h3>
+    
+    <h4>Status</h4>
+    <ul>
+        <li><b>status</b> - Interface Status (IP, MAC, Speed)</li>
+        <li><b>interfaces</b> - Alle Netzwerk-Interfaces</li>
+        <li><b>statistics</b> - RX/TX Bytes und Pakete</li>
+    </ul>
+    
+    <h4>Steuerung</h4>
+    <ul>
+        <li><b>enable</b> - Interface aktivieren</li>
+        <li><b>disable</b> - Interface deaktivieren</li>
+    </ul>
+    
+    <h4>Konfiguration</h4>
+    <ul>
+        <li><b>dhcp</b> - DHCP aktivieren</li>
+        <li><b>static</b> - Statische IP setzen</li>
+    </ul>
+    
+    <h3>Eingabe (für static)</h3>
+    <dl class="message-properties">
+        <dt>ipAddress <span class="property-type">string</span></dt>
+        <dt>netmask <span class="property-type">string</span></dt>
+        <dt>gateway <span class="property-type">string</span></dt>
+        <dt>dns <span class="property-type">string|array</span></dt>
+    </dl>
+</script>

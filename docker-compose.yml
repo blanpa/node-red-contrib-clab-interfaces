@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  node-red:
+    image: nodered/node-red:latest
+    container_name: node-red-clab
+    restart: unless-stopped
+    ports:
+      - "1880:1880"
+    volumes:
+      # Node-RED data persistence
+      - node-red-data:/data
+      # Mount this package for development (optional)
+      - ./:/data/node_modules/node-red-contrib-clab-interfaces:ro
+      # Hardware access
+      - /dev:/dev
+      - /sys:/sys:ro
+      - /proc:/proc:ro
+    environment:
+      - TZ=Europe/Berlin
+    # Required for hardware access
+    privileged: true
+    group_add:
+      - dialout  # Serial ports
+      - gpio     # GPIO access
+      - i2c      # I2C access
+    networks:
+      - clab-network
+
+volumes:
+  node-red-data:
+
+networks:
+  clab-network:
+    driver: bridge

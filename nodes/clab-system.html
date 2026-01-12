@@ -1,0 +1,112 @@
+<!-- CompuLab System Node -->
+<script type="text/javascript">
+    RED.nodes.registerType('clab-system', {
+        category: 'CompuLab',
+        color: '#6B8E9F',
+        defaults: {
+            name: { value: '' },
+            action: { value: 'info' },
+            timeout: { value: 60 },
+            bytes: { value: 32 },
+            delay: { value: 0 }
+        },
+        inputs: 1,
+        outputs: 1,
+        icon: 'icons/clab.svg',
+        label: function() {
+            return this.name || 'System';
+        },
+        paletteLabel: 'System',
+        labelStyle: function() {
+            return this.name ? 'node_label_italic' : '';
+        }
+    });
+</script>
+
+<script type="text/html" data-template-name="clab-system">
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+    <div class="form-row">
+        <label for="node-input-action"><i class="fa fa-cog"></i> Aktion</label>
+        <select id="node-input-action">
+            <optgroup label="System Info">
+                <option value="info">System Info</option>
+                <option value="uptime">Uptime</option>
+                <option value="temperature">Temperatur</option>
+            </optgroup>
+            <optgroup label="RTC (Echtzeituhr)">
+                <option value="rtc-read">RTC lesen</option>
+                <option value="rtc-set">RTC setzen</option>
+                <option value="rtc-sync">RTC → System sync</option>
+            </optgroup>
+            <optgroup label="Watchdog">
+                <option value="watchdog-status">Watchdog Status</option>
+                <option value="watchdog-enable">Watchdog aktivieren</option>
+                <option value="watchdog-disable">Watchdog deaktivieren</option>
+                <option value="watchdog-kick">Watchdog kick</option>
+            </optgroup>
+            <optgroup label="TPM">
+                <option value="tpm-status">TPM Status</option>
+                <option value="tpm-random">TPM Zufallszahlen</option>
+            </optgroup>
+            <optgroup label="Power">
+                <option value="reboot">Neustart</option>
+                <option value="shutdown">Herunterfahren</option>
+            </optgroup>
+        </select>
+    </div>
+    <div class="form-row">
+        <label for="node-input-timeout"><i class="fa fa-clock-o"></i> Watchdog Timeout (s)</label>
+        <input type="number" id="node-input-timeout" min="10" max="3600">
+    </div>
+    <div class="form-row">
+        <label for="node-input-bytes"><i class="fa fa-random"></i> TPM Random Bytes</label>
+        <input type="number" id="node-input-bytes" min="1" max="1024">
+    </div>
+    <div class="form-row">
+        <label for="node-input-delay"><i class="fa fa-hourglass"></i> Verzögerung (s)</label>
+        <input type="number" id="node-input-delay" min="0" max="3600">
+    </div>
+</script>
+
+<script type="text/html" data-help-name="clab-system">
+    <p>System-Funktionen für CompuLab IoT Gateway.</p>
+    
+    <h3>Aktionen</h3>
+    
+    <h4>System Info</h4>
+    <ul>
+        <li><b>info</b> - Hostname, Kernel, CPU, Memory</li>
+        <li><b>uptime</b> - System Laufzeit</li>
+        <li><b>temperature</b> - CPU Temperatur</li>
+    </ul>
+    
+    <h4>RTC (Echtzeituhr)</h4>
+    <ul>
+        <li><b>rtc-read</b> - Hardware-Uhr auslesen</li>
+        <li><b>rtc-set</b> - Hardware-Uhr setzen (msg.time)</li>
+        <li><b>rtc-sync</b> - RTC mit Systemzeit synchronisieren</li>
+    </ul>
+    
+    <h4>Watchdog</h4>
+    <ul>
+        <li><b>watchdog-status</b> - Watchdog Status</li>
+        <li><b>watchdog-enable</b> - Watchdog aktivieren</li>
+        <li><b>watchdog-disable</b> - Watchdog deaktivieren</li>
+        <li><b>watchdog-kick</b> - Watchdog zurücksetzen</li>
+    </ul>
+    
+    <h4>TPM</h4>
+    <ul>
+        <li><b>tpm-status</b> - TPM Verfügbarkeit</li>
+        <li><b>tpm-random</b> - Zufallszahlen generieren</li>
+    </ul>
+    
+    <h4>Power</h4>
+    <ul>
+        <li><b>reboot</b> - System neustarten</li>
+        <li><b>shutdown</b> - System herunterfahren</li>
+    </ul>
+</script>

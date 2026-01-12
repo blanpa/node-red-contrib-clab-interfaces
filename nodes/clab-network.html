@@ -1,0 +1,132 @@
+<!-- CompuLab Network Node -->
+<script type="text/javascript">
+    RED.nodes.registerType('clab-network', {
+        category: 'CompuLab',
+        color: '#6B8E9F',
+        defaults: {
+            name: { value: '' },
+            action: { value: 'ping' },
+            host: { value: '' },
+            hostname: { value: '' },
+            port: { value: 80 },
+            url: { value: '' },
+            count: { value: 4 },
+            timeout: { value: 5 },
+            maxHops: { value: 30 },
+            dnsType: { value: 'A' },
+            portTimeout: { value: 5000 },
+            httpTimeout: { value: 10000 }
+        },
+        inputs: 1,
+        outputs: 1,
+        icon: 'icons/clab.svg',
+        label: function() {
+            return this.name || 'Network';
+        },
+        paletteLabel: 'Network',
+        labelStyle: function() {
+            return this.name ? 'node_label_italic' : '';
+        }
+    });
+</script>
+
+<script type="text/html" data-template-name="clab-network">
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+    <div class="form-row">
+        <label for="node-input-action"><i class="fa fa-globe"></i> Aktion</label>
+        <select id="node-input-action">
+            <optgroup label="Erreichbarkeit">
+                <option value="ping">Ping</option>
+                <option value="traceroute">Traceroute</option>
+                <option value="port-check">Port Check</option>
+                <option value="http-check">HTTP Check</option>
+            </optgroup>
+            <optgroup label="DNS">
+                <option value="dns">DNS Lookup</option>
+                <option value="reverse-dns">Reverse DNS</option>
+            </optgroup>
+            <optgroup label="Info">
+                <option value="routes">Routing Tabelle</option>
+                <option value="arp">ARP Tabelle</option>
+                <option value="speed-test">Speed Test</option>
+            </optgroup>
+        </select>
+    </div>
+    <div class="form-row">
+        <label for="node-input-host"><i class="fa fa-server"></i> Host/IP</label>
+        <input type="text" id="node-input-host" placeholder="z.B. 8.8.8.8 oder google.com">
+    </div>
+    <div class="form-row">
+        <label for="node-input-hostname"><i class="fa fa-globe"></i> Hostname (DNS)</label>
+        <input type="text" id="node-input-hostname" placeholder="z.B. google.com">
+    </div>
+    <div class="form-row">
+        <label for="node-input-port"><i class="fa fa-plug"></i> Port</label>
+        <input type="number" id="node-input-port" min="1" max="65535">
+    </div>
+    <div class="form-row">
+        <label for="node-input-url"><i class="fa fa-link"></i> URL</label>
+        <input type="text" id="node-input-url" placeholder="https://example.com">
+    </div>
+    <div class="form-row">
+        <label for="node-input-dnsType"><i class="fa fa-list"></i> DNS Typ</label>
+        <select id="node-input-dnsType">
+            <option value="A">A (IPv4)</option>
+            <option value="AAAA">AAAA (IPv6)</option>
+            <option value="MX">MX (Mail)</option>
+            <option value="TXT">TXT</option>
+            <option value="NS">NS</option>
+            <option value="CNAME">CNAME</option>
+        </select>
+    </div>
+    <div class="form-row">
+        <label for="node-input-count"><i class="fa fa-repeat"></i> Ping Anzahl</label>
+        <input type="number" id="node-input-count" min="1" max="100">
+    </div>
+    <div class="form-row">
+        <label for="node-input-maxHops"><i class="fa fa-road"></i> Max Hops</label>
+        <input type="number" id="node-input-maxHops" min="1" max="64">
+    </div>
+</script>
+
+<script type="text/html" data-help-name="clab-network">
+    <p>Netzwerk-Diagnose für CompuLab IoT Gateway.</p>
+    
+    <h3>Aktionen</h3>
+    
+    <h4>Erreichbarkeit</h4>
+    <ul>
+        <li><b>ping</b> - Ping mit RTT und Statistik</li>
+        <li><b>traceroute</b> - Route zum Ziel</li>
+        <li><b>port-check</b> - TCP Port prüfen</li>
+        <li><b>http-check</b> - HTTP/HTTPS Erreichbarkeit</li>
+    </ul>
+    
+    <h4>DNS</h4>
+    <ul>
+        <li><b>dns</b> - DNS Lookup (A, AAAA, MX, etc.)</li>
+        <li><b>reverse-dns</b> - IP → Hostname</li>
+    </ul>
+    
+    <h4>Info</h4>
+    <ul>
+        <li><b>routes</b> - Routing Tabelle</li>
+        <li><b>arp</b> - ARP Tabelle (MAC Adressen)</li>
+        <li><b>speed-test</b> - Download Speed Test</li>
+    </ul>
+    
+    <h3>Eingabe</h3>
+    <dl class="message-properties">
+        <dt class="optional">host <span class="property-type">string</span></dt>
+        <dd>Ziel für ping/traceroute/port-check</dd>
+        <dt class="optional">hostname <span class="property-type">string</span></dt>
+        <dd>Hostname für DNS Lookup</dd>
+        <dt class="optional">port <span class="property-type">number</span></dt>
+        <dd>Port für port-check</dd>
+        <dt class="optional">url <span class="property-type">string</span></dt>
+        <dd>URL für http-check</dd>
+    </dl>
+</script>

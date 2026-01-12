@@ -1,0 +1,122 @@
+<!-- CompuLab WiFi Node -->
+<script type="text/javascript">
+    RED.nodes.registerType('clab-wifi', {
+        category: 'CompuLab',
+        color: '#6B8E9F',
+        defaults: {
+            name: { value: '' },
+            action: { value: 'status' },
+            interface: { value: 'wlan0' },
+            ssid: { value: '' },
+            password: { value: '' },
+            apSsid: { value: 'CompuLab-AP' },
+            apPassword: { value: '' },
+            band: { value: 'bg' }
+        },
+        inputs: 1,
+        outputs: 1,
+        icon: 'icons/clab.svg',
+        label: function() {
+            return this.name || 'WiFi';
+        },
+        paletteLabel: 'WiFi',
+        labelStyle: function() {
+            return this.name ? 'node_label_italic' : '';
+        }
+    });
+</script>
+
+<script type="text/html" data-template-name="clab-wifi">
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+    <div class="form-row">
+        <label for="node-input-action"><i class="fa fa-wifi"></i> Aktion</label>
+        <select id="node-input-action">
+            <optgroup label="Status">
+                <option value="status">Status</option>
+                <option value="enable">Aktivieren</option>
+                <option value="disable">Deaktivieren</option>
+            </optgroup>
+            <optgroup label="Netzwerke">
+                <option value="scan">Scannen</option>
+                <option value="connect">Verbinden</option>
+                <option value="disconnect">Trennen</option>
+                <option value="saved">Gespeicherte Verbindungen</option>
+                <option value="delete">Verbindung löschen</option>
+            </optgroup>
+            <optgroup label="Access Point">
+                <option value="ap-start">AP starten</option>
+                <option value="ap-stop">AP stoppen</option>
+            </optgroup>
+        </select>
+    </div>
+    <div class="form-row">
+        <label for="node-input-interface"><i class="fa fa-plug"></i> Interface</label>
+        <input type="text" id="node-input-interface" placeholder="wlan0">
+    </div>
+    <div class="form-row">
+        <label for="node-input-ssid"><i class="fa fa-wifi"></i> SSID</label>
+        <input type="text" id="node-input-ssid" placeholder="Netzwerkname">
+    </div>
+    <div class="form-row">
+        <label for="node-input-password"><i class="fa fa-key"></i> Passwort</label>
+        <input type="password" id="node-input-password" placeholder="WiFi Passwort">
+    </div>
+    <div class="form-row">
+        <label><i class="fa fa-broadcast-tower"></i> Access Point</label>
+    </div>
+    <div class="form-row" style="margin-left: 20px;">
+        <label for="node-input-apSsid" style="width: 80px;">AP Name</label>
+        <input type="text" id="node-input-apSsid" style="width: 200px;" placeholder="CompuLab-AP">
+    </div>
+    <div class="form-row" style="margin-left: 20px;">
+        <label for="node-input-apPassword" style="width: 80px;">AP Passwort</label>
+        <input type="password" id="node-input-apPassword" style="width: 200px;" placeholder="Min. 8 Zeichen">
+    </div>
+    <div class="form-row" style="margin-left: 20px;">
+        <label for="node-input-band" style="width: 80px;">Band</label>
+        <select id="node-input-band" style="width: 200px;">
+            <option value="bg">2.4 GHz</option>
+            <option value="a">5 GHz</option>
+        </select>
+    </div>
+</script>
+
+<script type="text/html" data-help-name="clab-wifi">
+    <p>WiFi-Steuerung für CompuLab IoT Gateway.</p>
+    
+    <h3>Eingabe</h3>
+    <dl class="message-properties">
+        <dt class="optional">action <span class="property-type">string</span></dt>
+        <dd>Aktion (überschreibt Konfiguration)</dd>
+        <dt class="optional">ssid <span class="property-type">string</span></dt>
+        <dd>Netzwerkname für connect</dd>
+        <dt class="optional">password <span class="property-type">string</span></dt>
+        <dd>WiFi Passwort</dd>
+    </dl>
+    
+    <h3>Aktionen</h3>
+    
+    <h4>Status</h4>
+    <ul>
+        <li><b>status</b> - WiFi Status (SSID, IP, Signal)</li>
+        <li><b>enable/disable</b> - WiFi an/aus</li>
+    </ul>
+    
+    <h4>Netzwerke</h4>
+    <ul>
+        <li><b>scan</b> - Nach Netzwerken suchen</li>
+        <li><b>connect</b> - Mit Netzwerk verbinden</li>
+        <li><b>disconnect</b> - Verbindung trennen</li>
+        <li><b>saved</b> - Gespeicherte Verbindungen</li>
+        <li><b>delete</b> - Verbindung löschen</li>
+    </ul>
+    
+    <h4>Access Point</h4>
+    <ul>
+        <li><b>ap-start</b> - Hotspot erstellen</li>
+        <li><b>ap-stop</b> - Hotspot stoppen</li>
+    </ul>
+</script>

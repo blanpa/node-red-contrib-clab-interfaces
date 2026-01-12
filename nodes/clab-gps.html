@@ -1,0 +1,87 @@
+<!-- CompuLab GPS Node -->
+<script type="text/javascript">
+    RED.nodes.registerType('clab-gps', {
+        category: 'CompuLab',
+        color: '#6B8E9F',
+        defaults: {
+            name: { value: '' },
+            action: { value: 'position' },
+            device: { value: '/dev/ttyUSB1' },
+            interval: { value: 0 },
+            lat1: { value: '' },
+            lon1: { value: '' },
+            lat2: { value: '' },
+            lon2: { value: '' }
+        },
+        inputs: 1,
+        outputs: 1,
+        icon: 'icons/clab.svg',
+        label: function() {
+            return this.name || 'GPS';
+        },
+        paletteLabel: 'GPS',
+        labelStyle: function() {
+            return this.name ? 'node_label_italic' : '';
+        }
+    });
+</script>
+
+<script type="text/html" data-template-name="clab-gps">
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+    <div class="form-row">
+        <label for="node-input-action"><i class="fa fa-map-marker"></i> Aktion</label>
+        <select id="node-input-action">
+            <option value="position">Position lesen</option>
+            <option value="satellites">Satelliten Info</option>
+            <option value="distance">Distanz berechnen</option>
+            <option value="start-gpsd">gpsd starten</option>
+            <option value="stop-gpsd">gpsd stoppen</option>
+        </select>
+    </div>
+    <div class="form-row">
+        <label for="node-input-device"><i class="fa fa-usb"></i> GPS Device</label>
+        <input type="text" id="node-input-device" placeholder="/dev/ttyUSB1">
+    </div>
+    <div class="form-row">
+        <label for="node-input-interval"><i class="fa fa-clock-o"></i> Intervall (ms)</label>
+        <input type="number" id="node-input-interval" min="0" step="1000" placeholder="0 = nur bei Trigger">
+    </div>
+    <div class="form-row">
+        <label><i class="fa fa-calculator"></i> Distanz-Berechnung</label>
+    </div>
+    <div class="form-row" style="margin-left: 20px;">
+        <label style="width: 50px;">Von:</label>
+        <input type="text" id="node-input-lat1" style="width: 100px;" placeholder="Lat">
+        <input type="text" id="node-input-lon1" style="width: 100px;" placeholder="Lon">
+    </div>
+    <div class="form-row" style="margin-left: 20px;">
+        <label style="width: 50px;">Nach:</label>
+        <input type="text" id="node-input-lat2" style="width: 100px;" placeholder="Lat">
+        <input type="text" id="node-input-lon2" style="width: 100px;" placeholder="Lon">
+    </div>
+</script>
+
+<script type="text/html" data-help-name="clab-gps">
+    <p>GPS-Funktionen für CompuLab IoT Gateway.</p>
+    
+    <h3>Aktionen</h3>
+    <ul>
+        <li><b>position</b> - GPS Position (Lat, Lon, Alt, Speed)</li>
+        <li><b>satellites</b> - Satelliten-Info (sichtbar, genutzt)</li>
+        <li><b>distance</b> - Distanz zwischen zwei Punkten</li>
+        <li><b>start-gpsd</b> - gpsd Daemon starten</li>
+        <li><b>stop-gpsd</b> - gpsd Daemon stoppen</li>
+    </ul>
+    
+    <h3>Ausgabe (Position)</h3>
+    <dl class="message-properties">
+        <dt>payload.latitude <span class="property-type">number</span></dt>
+        <dt>payload.longitude <span class="property-type">number</span></dt>
+        <dt>payload.altitude <span class="property-type">number</span></dt>
+        <dt>payload.speed <span class="property-type">number</span></dt>
+        <dt>payload.fix <span class="property-type">string</span></dt>
+    </dl>
+</script>

@@ -1,0 +1,177 @@
+<!-- CompuLab CAN Config Node -->
+<script type="text/javascript">
+    RED.nodes.registerType('clab-can-config', {
+        category: 'config',
+        defaults: {
+            name: { value: '' },
+            interface: { value: 'can0', required: true },
+            bitrate: { value: 500000 }
+        },
+        label: function() {
+            return this.name || `CAN: ${this.interface} @ ${this.bitrate}`;
+        }
+    });
+</script>
+
+<script type="text/html" data-template-name="clab-can-config">
+    <div class="form-row">
+        <label for="node-config-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-config-input-name" placeholder="Name">
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-interface"><i class="fa fa-plug"></i> Interface</label>
+        <select id="node-config-input-interface">
+            <option value="can0">can0</option>
+            <option value="can1">can1</option>
+            <option value="vcan0">vcan0 (virtuell)</option>
+        </select>
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-bitrate"><i class="fa fa-tachometer"></i> Bitrate</label>
+        <select id="node-config-input-bitrate">
+            <option value="125000">125 kbit/s</option>
+            <option value="250000">250 kbit/s</option>
+            <option value="500000">500 kbit/s</option>
+            <option value="1000000">1 Mbit/s</option>
+        </select>
+    </div>
+</script>
+
+<!-- CompuLab CAN In Node -->
+<script type="text/javascript">
+    RED.nodes.registerType('clab-can-in', {
+        category: 'CompuLab',
+        color: '#6B8E9F',
+        defaults: {
+            name: { value: '' },
+            can: { value: '', type: 'clab-can-config', required: true },
+            filterIds: { value: '' }
+        },
+        inputs: 0,
+        outputs: 1,
+        icon: 'icons/clab.svg',
+        label: function() {
+            return this.name || 'CAN In';
+        },
+        paletteLabel: 'CAN In',
+        labelStyle: function() {
+            return this.name ? 'node_label_italic' : '';
+        }
+    });
+</script>
+
+<script type="text/html" data-template-name="clab-can-in">
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+    <div class="form-row">
+        <label for="node-input-can"><i class="fa fa-plug"></i> CAN Interface</label>
+        <input type="text" id="node-input-can">
+    </div>
+    <div class="form-row">
+        <label for="node-input-filterIds"><i class="fa fa-filter"></i> Filter IDs (Hex)</label>
+        <input type="text" id="node-input-filterIds" placeholder="z.B. 123, 456, 7FF">
+    </div>
+</script>
+
+<script type="text/html" data-help-name="clab-can-in">
+    <p>Empfängt CAN Bus Nachrichten.</p>
+    
+    <h3>Ausgabe</h3>
+    <dl class="message-properties">
+        <dt>payload <span class="property-type">object</span></dt>
+        <dd>
+            <ul>
+                <li><code>id</code> - CAN ID (dezimal)</li>
+                <li><code>idHex</code> - CAN ID (hexadezimal)</li>
+                <li><code>dlc</code> - Data Length Code</li>
+                <li><code>data</code> - Daten als Array</li>
+                <li><code>dataHex</code> - Daten als Hex-String</li>
+            </ul>
+        </dd>
+        <dt>canId <span class="property-type">number</span></dt>
+        <dd>Die CAN ID der Nachricht</dd>
+        <dt>interface <span class="property-type">string</span></dt>
+        <dd>Das CAN Interface (z.B. can0)</dd>
+    </dl>
+    
+    <h3>Details</h3>
+    <p>Empfängt alle CAN Nachrichten vom konfigurierten Interface.
+    Optional können Filter-IDs angegeben werden (kommagetrennt, hexadezimal),
+    um nur bestimmte Nachrichten zu empfangen.</p>
+    
+    <p>Benötigt das I/O Add-on für IOT-GATE-iMX8.</p>
+</script>
+
+<!-- CompuLab CAN Out Node -->
+<script type="text/javascript">
+    RED.nodes.registerType('clab-can-out', {
+        category: 'CompuLab',
+        color: '#6B8E9F',
+        defaults: {
+            name: { value: '' },
+            can: { value: '', type: 'clab-can-config', required: true },
+            canId: { value: '' }
+        },
+        inputs: 1,
+        outputs: 1,
+        icon: 'icons/clab.svg',
+        align: 'right',
+        label: function() {
+            return this.name || (this.canId ? `CAN Out: 0x${this.canId}` : 'CAN Out');
+        },
+        paletteLabel: 'CAN Out',
+        labelStyle: function() {
+            return this.name ? 'node_label_italic' : '';
+        }
+    });
+</script>
+
+<script type="text/html" data-template-name="clab-can-out">
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+    <div class="form-row">
+        <label for="node-input-can"><i class="fa fa-plug"></i> CAN Interface</label>
+        <input type="text" id="node-input-can">
+    </div>
+    <div class="form-row">
+        <label for="node-input-canId"><i class="fa fa-hashtag"></i> CAN ID (Hex)</label>
+        <input type="text" id="node-input-canId" placeholder="z.B. 123">
+    </div>
+</script>
+
+<script type="text/html" data-help-name="clab-can-out">
+    <p>Sendet CAN Bus Nachrichten.</p>
+    
+    <h3>Eingabe</h3>
+    <dl class="message-properties">
+        <dt>payload <span class="property-type">array | string | object</span></dt>
+        <dd>Die zu sendenden Daten:
+            <ul>
+                <li>Array: [0x01, 0x02, 0x03, ...]</li>
+                <li>String: "01 02 03" oder "01,02,03"</li>
+                <li>Object: { id: 0x123, data: [1,2,3] }</li>
+            </ul>
+        </dd>
+        <dt class="optional">canId <span class="property-type">number | string</span></dt>
+        <dd>CAN ID (überschreibt Konfiguration)</dd>
+    </dl>
+    
+    <h3>Ausgabe</h3>
+    <dl class="message-properties">
+        <dt>result <span class="property-type">object</span></dt>
+        <dd>Ergebnis des Sendevorgangs</dd>
+    </dl>
+    
+    <h3>Details</h3>
+    <p>Sendet eine CAN Nachricht mit der angegebenen ID und Daten.
+    Die CAN ID kann in der Konfiguration oder per msg.canId angegeben werden.</p>
+    
+    <h3>Beispiel</h3>
+    <pre>msg.canId = 0x123;
+msg.payload = [0x01, 0x02, 0x03, 0x04];
+return msg;</pre>
+</script>
