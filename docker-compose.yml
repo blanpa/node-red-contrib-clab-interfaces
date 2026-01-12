@@ -12,18 +12,20 @@ services:
       - node-red-data:/data
       # Mount this package for development (optional)
       - ./:/data/node_modules/node-red-contrib-clab-interfaces:ro
-      # Hardware access
+      # Hardware access (read-write for GPIO/LED control)
       - /dev:/dev
-      - /sys:/sys:ro
+      - /sys:/sys
       - /proc:/proc:ro
+      - /run/dbus:/run/dbus:ro
     environment:
       - TZ=Europe/Berlin
     # Required for hardware access
     privileged: true
+    user: "0:0"  # Run as root for GPIO/LED access
     group_add:
       - dialout  # Serial ports
-      - gpio     # GPIO access
-      - i2c      # I2C access
+      # - gpio   # GPIO access (not available on all systems)
+      # - i2c    # I2C access (not available on all systems)
     networks:
       - clab-network
 

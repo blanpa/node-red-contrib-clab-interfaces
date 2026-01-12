@@ -5,7 +5,29 @@
 
 const { exec } = require('child_process');
 const util = require('util');
+const fs = require('fs').promises;
 const execAsync = util.promisify(exec);
+
+// LED Mappings für verschiedene CompuLab Geräte
+const LED_MAPPINGS = {
+    'IOT-GATE-IMX8PLUS': {
+        green: '/sys/class/leds/Green_1',
+        yellow: '/sys/class/leds/Red_1',  // Red_1 als "yellow"
+        red: '/sys/class/leds/Red_2',
+        green2: '/sys/class/leds/Green_2'
+    },
+    'IOT-GATE-iMX8': {
+        green: '/sys/class/leds/Green_1',
+        yellow: '/sys/class/leds/Red_1',
+        red: '/sys/class/leds/Red_2',
+        green2: '/sys/class/leds/Green_2'
+    },
+    'default': {
+        green: '/sys/class/leds/Green_1',
+        yellow: '/sys/class/leds/Red_1',
+        red: '/sys/class/leds/Red_2'
+    }
+};
 
 module.exports = function(RED) {
     
@@ -13,18 +35,26 @@ module.exports = function(RED) {
         RED.nodes.createNode(this, config);
         const node = this;
         
-        const ledPath = '/sys/class/leds/user-led';
+        const deviceType = config.deviceType || 'IOT-GATE-IMX8PLUS';
+        const ledMapping = LED_MAPPINGS[deviceType] || LED_MAPPINGS['default'];
+        const color = config.color || 'green';
+        const ledPath = ledMapping[color] || ledMapping.green;
         let blinkInterval = null;
 
         async function setLed(state) {
             const value = state ? '1' : '0';
-            await execAsync(`echo ${value} | sudo tee ${ledPath}/brightness`);
+            try {
+                await fs.writeFile(`${ledPath}/brightness`, value);
+            } catch (e) {
+                // Fallback mit echo (für Kompatibilität)
+                await execAsync(`echo ${value} > ${ledPath}/brightness`);
+            }
         }
 
         async function getLedState() {
             try {
-                const { stdout } = await execAsync(`cat ${ledPath}/brightness`);
-                return parseInt(stdout.trim()) > 0;
+                const data = await fs.readFile(`${ledPath}/brightness`, 'utf8');
+                return parseInt(data.trim()) > 0;
             } catch (e) {
                 return false;
             }
